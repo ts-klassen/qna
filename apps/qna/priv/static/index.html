@@ -215,12 +215,18 @@
                     tbody.innerHTML = '';
                     data.users.forEach(userId => {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${userId}</td>
-                            <td>
-                                <button onclick="openPasswordModal('${userId}')">パスワード変更</button>
-                            </td>
-                        `;
+
+                        const tdId = document.createElement('td');
+                        tdId.textContent = userId;
+                        tr.appendChild(tdId);
+
+                        const tdAction = document.createElement('td');
+                        const changePwdButton = document.createElement('button');
+                        changePwdButton.textContent = 'パスワード変更';
+                        changePwdButton.onclick = () => openPasswordModal(userId);
+                        tdAction.appendChild(changePwdButton);
+                        tr.appendChild(tdAction);
+
                         tbody.appendChild(tr);
                     });
                 }
@@ -352,10 +358,15 @@
                     tbody.innerHTML = '';
                     data.ip_list.forEach(ip => {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${ip.ip}</td>
-                            <td>${ip.memo || ''}</td>
-                        `;
+
+                        const tdIp = document.createElement('td');
+                        tdIp.textContent = ip.ip;
+                        tr.appendChild(tdIp);
+
+                        const tdMemo = document.createElement('td');
+                        tdMemo.textContent = ip.memo || '';
+                        tr.appendChild(tdMemo);
+
                         tbody.appendChild(tr);
                     });
                 }
