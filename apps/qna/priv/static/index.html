@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>管理者管理ページ</title>
-    <script src="admin.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,6 +34,34 @@
         }
         button {
             padding: 5px 10px;
+            cursor: pointer;
+        }
+        /* 新規ユーザー追加後のクレデンシャル表示用スタイル */
+        #new-user-credentials {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #4CAF50;
+            background-color: #e8f5e9;
+            display: none;
+        }
+        #new-user-credentials h3 {
+            margin-top: 0;
+        }
+        .credential {
+            margin-bottom: 10px;
+        }
+        .credential span {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        .copy-button {
+            padding: 3px 6px;
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -65,6 +92,21 @@
             </label>
             <button type="submit">追加</button>
         </form>
+
+        <!-- 新規ユーザー追加後のクレデンシャル表示 -->
+        <div id="new-user-credentials">
+            <h3>新規ユーザーのクレデンシャル</h3>
+            <div class="credential">
+                <span>ユーザーID:</span>
+                <span id="credential-user-id"></span>
+                <button class="copy-button" onclick="copyToClipboard('credential-user-id')">コピー</button>
+            </div>
+            <div class="credential">
+                <span>初期パスワード:</span>
+                <span id="credential-password"></span>
+                <button class="copy-button" onclick="copyToClipboard('credential-password')">コピー</button>
+            </div>
+        </div>
     </section>
 
     <section id="ip-management">
@@ -151,7 +193,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`ユーザーが追加されました。パスワード: ${data.passwd}`);
+                    // クレデンシャルを表示
+                    document.getElementById('credential-user-id').textContent = userId;
+                    document.getElementById('credential-password').textContent = data.passwd;
+                    document.getElementById('new-user-credentials').style.display = 'block';
+                    
                     fetchUsers();
                     document.getElementById('add-user-form').reset();
                 } else {
@@ -260,6 +306,16 @@
                 console.error('Error adding IP address:', error);
             });
         });
+
+        // クリップボードにテキストをコピーする関数
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('コピーしました: ' + text);
+            }).catch(err => {
+                console.error('クリップボードへのコピーに失敗しました: ', err);
+            });
+        }
 
         // ページロード時にデータを取得
         window.onload = function() {
