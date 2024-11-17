@@ -122,6 +122,8 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>作成日時</th>
+                    <th>管理者</th>
                     <th>アクション</th>
                 </tr>
             </thead>
@@ -213,17 +215,26 @@
                 if (data && data.success && Array.isArray(data.users)) {
                     const tbody = document.querySelector('#users-table tbody');
                     tbody.innerHTML = '';
-                    data.users.forEach(userId => {
+                    data.users.forEach(user => {
                         const tr = document.createElement('tr');
 
                         const tdId = document.createElement('td');
-                        tdId.textContent = userId;
+                        tdId.textContent = user.id;
                         tr.appendChild(tdId);
+
+                        const tdCreatedAt = document.createElement('td');
+                        const createdAt = new Date(user.created_at);
+                        tdCreatedAt.textContent = createdAt.toLocaleString();
+                        tr.appendChild(tdCreatedAt);
+
+                        const tdIsAdmin = document.createElement('td');
+                        tdIsAdmin.textContent = user.is_admin ? 'はい' : 'いいえ';
+                        tr.appendChild(tdIsAdmin);
 
                         const tdAction = document.createElement('td');
                         const changePwdButton = document.createElement('button');
                         changePwdButton.textContent = 'パスワード変更';
-                        changePwdButton.onclick = () => openPasswordModal(userId);
+                        changePwdButton.onclick = () => openPasswordModal(user.id);
                         tdAction.appendChild(changePwdButton);
                         tr.appendChild(tdAction);
 
