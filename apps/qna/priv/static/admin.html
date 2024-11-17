@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>管理者管理ページ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        section {
+            margin-bottom: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 5px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        /* 新規ユーザー追加後のクレデンシャル表示用スタイル */
+        #new-user-credentials {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #4CAF50;
+            background-color: #e8f5e9;
+            display: none;
+        }
+        #new-user-credentials h3 {
+            margin-top: 0;
+        }
+        .credential {
+            margin-bottom: 10px;
+        }
+        .credential span {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        .copy-button {
+            padding: 3px 6px;
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+        /* モーダルダイアログのスタイル */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px; /* Could be more or less, depending on screen size */
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        .modal-form input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            box-sizing: border-box;
+        }
+        .modal-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>管理者管理ページ</h1>
+
+    <section id="user-management">
+        <h2>ユーザー管理</h2>
+        
+        <h3>ユーザー一覧</h3>
+        <table id="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>作成日時</th>
+                    <th>管理者</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ユーザーリストがここに表示されます -->
+            </tbody>
+        </table>
+
+        <h3>新規ユーザーの追加</h3>
+        <form id="add-user-form">
+            <input type="text" id="new-user-id" placeholder="ユーザーID" required>
+            <label>
+                <input type="checkbox" id="new-user-is-admin"> 管理者
+            </label>
+            <button type="submit">追加</button>
+        </form>
+
+        <!-- 新規ユーザー追加後のクレデンシャル表示 -->
+        <div id="new-user-credentials">
+            <h3>新規ユーザーのクレデンシャル</h3>
+            <div class="credential">
+                <span>ユーザーID:</span>
+                <span id="credential-user-id"></span>
+                <button class="copy-button" onclick="copyToClipboard('credential-user-id')">コピー</button>
+            </div>
+            <div class="credential">
+                <span>初期パスワード:</span>
+                <span id="credential-password"></span>
+                <button class="copy-button" onclick="copyToClipboard('credential-password')">コピー</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="ip-management">
+        <h2>IP管理</h2>
+        
+        <h3>IPアドレス一覧</h3>
+        <table id="ips-table">
+            <thead>
+                <tr>
+                    <th>IPアドレス</th>
+                    <th>メモ</th>
+                    <th>作成日時</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- IPアドレスリストがここに表示されます -->
+            </tbody>
+        </table>
+
+        <h3>新規IPアドレスの追加</h3>
+        <form id="add-ip-form">
+            <input type="text" id="new-ip-address" placeholder="IPアドレス" required>
+            <input type="text" id="new-ip-memo" placeholder="メモ">
+            <button type="submit">追加</button>
+        </form>
+    </section>
+
+    <!-- パスワード変更モーダル -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>パスワード変更</h3>
+            <form id="change-password-form" class="modal-form">
+                <input type="hidden" id="change-user-id">
+                <label for="new-password">新しいパスワード:</label>
+                <input type="password" id="new-password" placeholder="新しいパスワード" required>
+                <label for="confirm-password">パスワード確認:</label>
+                <input type="password" id="confirm-password" placeholder="新しいパスワードを再入力" required>
+                <button type="submit">変更</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ユーザー一覧の取得と表示
+        function fetchUsers() {
+            fetch('/qna/api/v1/users', {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    alert('ユーザー情報の取得に失敗しました。');
+                }
+            })
+            .then(data => {
+                if (data && data.success && Array.isArray(data.users)) {
+                    const tbody = document.querySelector('#users-table tbody');
+                    tbody.innerHTML = '';
+                    data.users.forEach(user => {
+                        const tr = document.createElement('tr');
+
+                        const tdId = document.createElement('td');
+                        tdId.textContent = user.id;
+                        tr.appendChild(tdId);
+
+                        const tdCreatedAt = document.createElement('td');
+                        const createdAt = new Date(user.created_at);
+                        tdCreatedAt.textContent = createdAt.toLocaleString('ja-JP', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        tr.appendChild(tdCreatedAt);
+
+                        const tdIsAdmin = document.createElement('td');
+                        tdIsAdmin.textContent = user.is_admin ? 'はい' : 'いいえ';
+                        tr.appendChild(tdIsAdmin);
+
+                        const tdAction = document.createElement('td');
+                        const changePwdButton = document.createElement('button');
+                        changePwdButton.textContent = 'パスワード変更';
+                        changePwdButton.onclick = () => openPasswordModal(user.id);
+                        tdAction.appendChild(changePwdButton);
+                        tr.appendChild(tdAction);
+
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+            });
+        }
+
+        // 新規ユーザーの追加
+        document.getElementById('add-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('new-user-id').value.trim();
+            const isAdmin = document.getElementById('new-user-is-admin').checked;
+
+            if (userId === '') {
+                alert('ユーザーIDを入力してください。');
+                return;
+            }
+
+            fetch('/qna/api/v1/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    id: userId,
+                    is_admin: isAdmin
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // クレデンシャルを表示
+                    document.getElementById('credential-user-id').textContent = userId;
+                    document.getElementById('credential-password').textContent = data.passwd;
+                    document.getElementById('new-user-credentials').style.display = 'block';
+                    
+                    fetchUsers();
+                    document.getElementById('add-user-form').reset();
+                } else {
+                    alert('ユーザーの追加に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+            });
+        });
+
+        // パスワード変更モーダルを開く
+        function openPasswordModal(userId) {
+            document.getElementById('password-modal').style.display = 'block';
+            document.getElementById('change-user-id').value = userId;
+            document.getElementById('change-password-form').reset();
+        }
+
+        // パスワード変更モーダルを閉じる
+        function closeModal() {
+            document.getElementById('password-modal').style.display = 'none';
+        }
+
+        // 外部クリックでモーダルを閉じる
+        window.onclick = function(event) {
+            const modal = document.getElementById('password-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // パスワード変更フォームの送信
+        document.getElementById('change-password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('change-user-id').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword === '' || confirmPassword === '') {
+                alert('パスワードを入力してください。');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('パスワードが一致しません。再度入力してください。');
+                return;
+            }
+
+            fetch('/qna/api/v1/users/passwd', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    id: userId,
+                    passwd: newPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('パスワードが更新されました。');
+                    closeModal();
+                } else {
+                    alert('パスワードの更新に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error changing password:', error);
+            });
+        });
+
+        // IPアドレス一覧の取得と表示
+        function fetchIPs() {
+            fetch('/qna/api/v1/ip', {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    alert('IPアドレス情報の取得に失敗しました。');
+                }
+            })
+            .then(data => {
+                if (data && data.success && Array.isArray(data.ip_list)) {
+                    const tbody = document.querySelector('#ips-table tbody');
+                    tbody.innerHTML = '';
+                    data.ip_list.forEach(ip => {
+                        const tr = document.createElement('tr');
+
+                        const tdIp = document.createElement('td');
+                        tdIp.textContent = ip.ip;
+                        tr.appendChild(tdIp);
+
+                        const tdMemo = document.createElement('td');
+                        tdMemo.textContent = ip.memo || '';
+                        tr.appendChild(tdMemo);
+
+                        const tdCreatedAt = document.createElement('td');
+                        const createdAt = new Date(ip.created_at);
+                        tdCreatedAt.textContent = createdAt.toLocaleString('ja-JP', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        tr.appendChild(tdCreatedAt);
+
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching IPs:', error);
+            });
+        }
+
+        // 新規IPアドレスの追加
+        document.getElementById('add-ip-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const ip = document.getElementById('new-ip-address').value.trim();
+            const memo = document.getElementById('new-ip-memo').value.trim();
+
+            if (ip === '') {
+                alert('IPアドレスを入力してください。');
+                return;
+            }
+
+            fetch('/qna/api/v1/ip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    ip: ip,
+                    memo: memo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('IPアドレスが追加されました。');
+                    fetchIPs();
+                    document.getElementById('add-ip-form').reset();
+                } else {
+                    alert('IPアドレスの追加に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding IP address:', error);
+            });
+        });
+
+        // クリップボードにテキストをコピーする関数
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('コピーしました: ' + text);
+            }).catch(err => {
+                console.error('クリップボードへのコピーに失敗しました: ', err);
+            });
+        }
+
+        // ページロード時にデータを取得
+        window.onload = function() {
+            fetchUsers();
+            fetchIPs();
+        };
+    </script>
+</body>
+</html>
