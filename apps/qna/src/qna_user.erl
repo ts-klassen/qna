@@ -26,9 +26,9 @@
 
 -spec list() -> [user()].
 list() ->
-    #{<<"rows">>:=Rows} = klsn_db:get(?MODULE, <<"_all_docs">>),
-    lists:map(fun(#{<<"id">>:=Id}) ->
-        Id
+    #{<<"rows">>:=Rows} = klsn_db:get(?MODULE, {raw, <<"_design/qna_user/_view/list">>}),
+    lists:map(fun(#{<<"value">>:=Value}) ->
+        Value
     end, Rows).
 
 -spec lookup(user_id()) -> klsn:maybe(user()).

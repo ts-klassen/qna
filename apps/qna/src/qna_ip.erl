@@ -18,9 +18,10 @@
 
 -spec list() -> [ip()].
 list() ->
-    #{<<"rows">>:=Rows} = klsn_db:get(?MODULE, <<"_all_docs">>),
-    lists:map(fun(#{<<"id">>:=Id}) ->
-        Id
+    #{<<"rows">>:=Rows} = klsn_db:get(?MODULE, {raw, <<"_design/qna_ip/_view/list">>}),
+    lists:map(fun
+        (#{<<"id">>:=Id, <<"value">>:=Value}) ->
+            Value
     end, Rows).
 
 -spec lookup(ip()) -> klsn:maybe(info()).
