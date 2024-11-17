@@ -93,18 +93,13 @@
     </section>
 
     <script>
-        // 基本認証情報を設定
-        const username = prompt("管理者ユーザー名を入力してください:");
-        const password = prompt("管理者パスワードを入力してください:");
-        const authHeader = 'Basic ' + btoa(username + ':' + password);
+        // 認証情報はページアクセス時に既に認証済みのため、ここでは不要です。
 
         // ユーザー一覧の取得と表示
         function fetchUsers() {
             fetch('/qna/api/v1/users', {
                 method: 'GET',
-                headers: {
-                    'Authorization': authHeader
-                }
+                credentials: 'same-origin'
             })
             .then(response => {
                 if (response.status === 200) {
@@ -144,9 +139,9 @@
             fetch('/qna/api/v1/users', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authHeader
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     id: userId,
                     is_admin: isAdmin
@@ -174,9 +169,9 @@
                 fetch('/qna/api/v1/users/passwd', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': authHeader
+                        'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         id: userId,
                         passwd: newPassword
@@ -200,9 +195,7 @@
         function fetchIPs() {
             fetch('/qna/api/v1/ip', {
                 method: 'GET',
-                headers: {
-                    'Authorization': authHeader
-                }
+                credentials: 'same-origin'
             })
             .then(response => {
                 if (response.status === 200) {
@@ -239,9 +232,9 @@
             fetch('/qna/api/v1/ip', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authHeader
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     ip: ip,
                     memo: memo
