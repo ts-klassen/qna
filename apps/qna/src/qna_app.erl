@@ -12,7 +12,12 @@
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
-            {"/health", qna_health_handler, #{}}
+            {"/qna/health", qna_health_handler, #{}}
+          , {"/qna/api/v1", qna_admin_handler, #{}}
+          , {"/qna/api/v1/:arg1", qna_admin_handler, #{}}
+          , {"/qna/api/v1/:arg1/:arg2", qna_admin_handler, #{}}
+          , {"/qna/api/v1/:arg1/:arg2/:arg3", qna_admin_handler, #{}}
+          , {"/qna/static/[...]", cowboy_static, {priv_dir, qna, "static"}}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(qna_http_listener,

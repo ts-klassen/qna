@@ -10,7 +10,7 @@ execute(Req0, Env) ->
             true;
         #{ peer := {Ip, _} } ->
             IpBin = iolist_to_binary(lists:join(<<".">>, lists:map(fun erlang:integer_to_binary/1, tuple_to_list(Ip)))),
-            case qna_db:lookup(qna_ip, IpBin) of
+            case klsn_db:lookup(qna_ip, IpBin) of
                 {value, _} ->
                     true;
                 none ->
@@ -19,50 +19,22 @@ execute(Req0, Env) ->
     end,
     Login = case {IsIpOk, Req0} of
         {true, #{ headers := #{ <<"authorization">> := Auth }}} ->
-            lookup_login(Auth);
+            qna_user:lookup_by_auth_header(Auth);
         _ ->
             none
     end,
     Req10 = cowboy_req:set_resp_header(<<"Access-Control-Allow-Origin">>, <<"*">>, Req0),
     Req20 = Req10#{ qna_login => Login },
-    Req30 = case Login of
+    Req30 = remove_credentials(Req20),
+    case Login of
         none ->
-            unauthorized(Req20);
+            {stop, unauthorized(Req30)};
         _ ->
-            Req20
-    end,
-    {ok, Req30, Env}.
-
-lookup_login(AuthorizationHeader) ->
-    {Username, Password} = credentials_from_header(AuthorizationHeader),
-    case qna_db:lookup(qna_user, Username) of
-        {value, #{<<"bcrypt">>:=Bcrypt}=Doc} ->
-            case bcrypte:verify(Password, Bcrypt) of
-                true ->
-                    {value, Doc};
-                false ->
-                    none
-            end;
-        none ->
-            none
+            {ok, Req30, Env}
     end.
 
-credentials_from_header(AuthorizationHeader) ->
-    case binary:split(AuthorizationHeader, <<$ >>) of
-        [<<"Basic">>, EncodedCredentials] ->
-            decoded_credentials(EncodedCredentials);
-        _ ->
-            {undefined, undefined}
-    end.
-
-decoded_credentials(EncodedCredentials) ->
-    DecodedCredentials = base64:decode(EncodedCredentials),
-    case binary:split(DecodedCredentials, <<$:>>) of
-        [Username, Password] ->
-            {Username, Password};
-        _ ->
-            {undefined, undefined}
-    end.
+remove_credentials(Req=#{headers:=Headers}) ->
+    Req#{headers := maps:remove(<<"authorization">>, Headers)}.
 
 unauthorized(Req0) ->
     cowboy_req:reply(401, #{
