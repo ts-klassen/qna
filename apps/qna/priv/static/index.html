@@ -49,7 +49,6 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>管理者</th>
                     <th>アクション</th>
                 </tr>
             </thead>
@@ -93,8 +92,6 @@
     </section>
 
     <script>
-        // 認証情報はページアクセス時に既に認証済みのため、ここでは不要です。
-
         // ユーザー一覧の取得と表示
         function fetchUsers() {
             fetch('/qna/api/v1/users', {
@@ -109,16 +106,15 @@
                 }
             })
             .then(data => {
-                if (data && data.success) {
+                if (data && data.success && Array.isArray(data.users)) {
                     const tbody = document.querySelector('#users-table tbody');
                     tbody.innerHTML = '';
-                    data.users.forEach(user => {
+                    data.users.forEach(userId => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td>${user.id}</td>
-                            <td>${user.is_admin ? 'はい' : 'いいえ'}</td>
+                            <td>${userId}</td>
                             <td>
-                                <button onclick="changePassword('${user.id}')">パスワード変更</button>
+                                <button onclick="changePassword('${userId}')">パスワード変更</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -133,8 +129,13 @@
         // 新規ユーザーの追加
         document.getElementById('add-user-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const userId = document.getElementById('new-user-id').value;
+            const userId = document.getElementById('new-user-id').value.trim();
             const isAdmin = document.getElementById('new-user-is-admin').checked;
+
+            if (userId === '') {
+                alert('ユーザーIDを入力してください。');
+                return;
+            }
 
             fetch('/qna/api/v1/users', {
                 method: 'POST',
@@ -205,7 +206,7 @@
                 }
             })
             .then(data => {
-                if (data && data.success) {
+                if (data && data.success && Array.isArray(data.ip_list)) {
                     const tbody = document.querySelector('#ips-table tbody');
                     tbody.innerHTML = '';
                     data.ip_list.forEach(ip => {
@@ -226,8 +227,13 @@
         // 新規IPアドレスの追加
         document.getElementById('add-ip-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const ip = document.getElementById('new-ip-address').value;
-            const memo = document.getElementById('new-ip-memo').value;
+            const ip = document.getElementById('new-ip-address').value.trim();
+            const memo = document.getElementById('new-ip-memo').value.trim();
+
+            if (ip === '') {
+                alert('IPアドレスを入力してください。');
+                return;
+            }
 
             fetch('/qna/api/v1/ip', {
                 method: 'POST',
