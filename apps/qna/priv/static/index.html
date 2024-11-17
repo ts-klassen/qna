@@ -63,6 +63,52 @@
             border: none;
             border-radius: 3px;
         }
+        /* モーダルダイアログのスタイル */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px; /* Could be more or less, depending on screen size */
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        .modal-form input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            box-sizing: border-box;
+        }
+        .modal-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -133,6 +179,22 @@
         </form>
     </section>
 
+    <!-- パスワード変更モーダル -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>パスワード変更</h3>
+            <form id="change-password-form" class="modal-form">
+                <input type="hidden" id="change-user-id">
+                <label for="new-password">新しいパスワード:</label>
+                <input type="password" id="new-password" placeholder="新しいパスワード" required>
+                <label for="confirm-password">パスワード確認:</label>
+                <input type="password" id="confirm-password" placeholder="新しいパスワードを再入力" required>
+                <button type="submit">変更</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         // ユーザー一覧の取得と表示
         function fetchUsers() {
@@ -156,7 +218,7 @@
                         tr.innerHTML = `
                             <td>${userId}</td>
                             <td>
-                                <button onclick="changePassword('${userId}')">パスワード変更</button>
+                                <button onclick="openPasswordModal('${userId}')">パスワード変更</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -209,34 +271,67 @@
             });
         });
 
-        // パスワード変更
-        function changePassword(userId) {
-            const newPassword = prompt(`ユーザー "${userId}" の新しいパスワードを入力してください:`);
-            if (newPassword) {
-                fetch('/qna/api/v1/users/passwd', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        id: userId,
-                        passwd: newPassword
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('パスワードが更新されました。');
-                    } else {
-                        alert('パスワードの更新に失敗しました。');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error changing password:', error);
-                });
+        // パスワード変更モーダルを開く
+        function openPasswordModal(userId) {
+            document.getElementById('password-modal').style.display = 'block';
+            document.getElementById('change-user-id').value = userId;
+            document.getElementById('change-password-form').reset();
+        }
+
+        // パスワード変更モーダルを閉じる
+        function closeModal() {
+            document.getElementById('password-modal').style.display = 'none';
+        }
+
+        // 外部クリックでモーダルを閉じる
+        window.onclick = function(event) {
+            const modal = document.getElementById('password-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
         }
+
+        // パスワード変更フォームの送信
+        document.getElementById('change-password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('change-user-id').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword === '' || confirmPassword === '') {
+                alert('パスワードを入力してください。');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('パスワードが一致しません。再度入力してください。');
+                return;
+            }
+
+            fetch('/qna/api/v1/users/passwd', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    id: userId,
+                    passwd: newPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('パスワードが更新されました。');
+                    closeModal();
+                } else {
+                    alert('パスワードの更新に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error changing password:', error);
+            });
+        });
 
         // IPアドレス一覧の取得と表示
         function fetchIPs() {
