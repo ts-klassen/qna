@@ -5,12 +5,11 @@
     ]).
 
 db_setup() ->
-    try klsn_db:create_db(qna_ip) catch
-        error:exists -> ok
-    end,
-    try klsn_db:create_db(qna_user) catch
-        error:exists -> ok
-    end,
+    lists:map(fun(DB) ->
+        try klsn_db:create_db(DB) catch
+            error:exists -> ok
+        end
+    end, [qna_id, qna_user, qna_ai]),
     embe:init_setup(),
     klsn_db:upsert(qna_ip, <<"_design/qna_ip">>, fun(MaybeDoc) ->
         Doc = case MaybeDoc of
@@ -35,6 +34,21 @@ db_setup() ->
             <<"views">> => #{
                 <<"list">> => #{
                     <<"map">> => <<"function (doc) {emit(doc.C, {id: doc._id, is_admin: doc.is_admin, created_by: doc.created_by, created_at: doc.C});}">>
+                }
+            }
+          , <<"language">> => <<"javascript">>
+        }
+    end),
+    klsn_db:upsert(qna_ai, <<"_design/qna_ai">>, fun(MaybeDoc) ->
+        Doc = case MaybeDoc of
+            {value, Doc0} -> Doc0;
+            none -> #{}
+        end,
+        Doc#{
+            <<"views">> => #{
+                <<"cost">> => #{
+                    <<"map">> => qna_ai:calc_cost_js()
+                  , <<"reduce">> => <<"_sum">>
                 }
             }
           , <<"language">> => <<"javascript">>
