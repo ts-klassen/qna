@@ -1,1 +1,272 @@
-hello world
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>管理者管理ページ</title>
+    <script src="admin.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        section {
+            margin-bottom: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 5px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>管理者管理ページ</h1>
+
+    <section id="user-management">
+        <h2>ユーザー管理</h2>
+        
+        <h3>ユーザー一覧</h3>
+        <table id="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>管理者</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ユーザーリストがここに表示されます -->
+            </tbody>
+        </table>
+
+        <h3>新規ユーザーの追加</h3>
+        <form id="add-user-form">
+            <input type="text" id="new-user-id" placeholder="ユーザーID" required>
+            <label>
+                <input type="checkbox" id="new-user-is-admin"> 管理者
+            </label>
+            <button type="submit">追加</button>
+        </form>
+    </section>
+
+    <section id="ip-management">
+        <h2>IP管理</h2>
+        
+        <h3>IPアドレス一覧</h3>
+        <table id="ips-table">
+            <thead>
+                <tr>
+                    <th>IPアドレス</th>
+                    <th>メモ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- IPアドレスリストがここに表示されます -->
+            </tbody>
+        </table>
+
+        <h3>新規IPアドレスの追加</h3>
+        <form id="add-ip-form">
+            <input type="text" id="new-ip-address" placeholder="IPアドレス" required>
+            <input type="text" id="new-ip-memo" placeholder="メモ">
+            <button type="submit">追加</button>
+        </form>
+    </section>
+
+    <script>
+        // 基本認証情報を設定
+        const username = prompt("管理者ユーザー名を入力してください:");
+        const password = prompt("管理者パスワードを入力してください:");
+        const authHeader = 'Basic ' + btoa(username + ':' + password);
+
+        // ユーザー一覧の取得と表示
+        function fetchUsers() {
+            fetch('/qna/api/v1/users', {
+                method: 'GET',
+                headers: {
+                    'Authorization': authHeader
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    alert('ユーザー情報の取得に失敗しました。');
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    const tbody = document.querySelector('#users-table tbody');
+                    tbody.innerHTML = '';
+                    data.users.forEach(user => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.is_admin ? 'はい' : 'いいえ'}</td>
+                            <td>
+                                <button onclick="changePassword('${user.id}')">パスワード変更</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+            });
+        }
+
+        // 新規ユーザーの追加
+        document.getElementById('add-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('new-user-id').value;
+            const isAdmin = document.getElementById('new-user-is-admin').checked;
+
+            fetch('/qna/api/v1/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader
+                },
+                body: JSON.stringify({
+                    id: userId,
+                    is_admin: isAdmin
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`ユーザーが追加されました。パスワード: ${data.passwd}`);
+                    fetchUsers();
+                    document.getElementById('add-user-form').reset();
+                } else {
+                    alert('ユーザーの追加に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+            });
+        });
+
+        // パスワード変更
+        function changePassword(userId) {
+            const newPassword = prompt(`ユーザー "${userId}" の新しいパスワードを入力してください:`);
+            if (newPassword) {
+                fetch('/qna/api/v1/users/passwd', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader
+                    },
+                    body: JSON.stringify({
+                        id: userId,
+                        passwd: newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('パスワードが更新されました。');
+                    } else {
+                        alert('パスワードの更新に失敗しました。');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error changing password:', error);
+                });
+            }
+        }
+
+        // IPアドレス一覧の取得と表示
+        function fetchIPs() {
+            fetch('/qna/api/v1/ip', {
+                method: 'GET',
+                headers: {
+                    'Authorization': authHeader
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    alert('IPアドレス情報の取得に失敗しました。');
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    const tbody = document.querySelector('#ips-table tbody');
+                    tbody.innerHTML = '';
+                    data.ip_list.forEach(ip => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${ip.ip}</td>
+                            <td>${ip.memo || ''}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching IPs:', error);
+            });
+        }
+
+        // 新規IPアドレスの追加
+        document.getElementById('add-ip-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const ip = document.getElementById('new-ip-address').value;
+            const memo = document.getElementById('new-ip-memo').value;
+
+            fetch('/qna/api/v1/ip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader
+                },
+                body: JSON.stringify({
+                    ip: ip,
+                    memo: memo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('IPアドレスが追加されました。');
+                    fetchIPs();
+                    document.getElementById('add-ip-form').reset();
+                } else {
+                    alert('IPアドレスの追加に失敗しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding IP address:', error);
+            });
+        });
+
+        // ページロード時にデータを取得
+        window.onload = function() {
+            fetchUsers();
+            fetchIPs();
+        };
+    </script>
+</body>
+</html>
