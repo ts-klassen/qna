@@ -9,7 +9,7 @@ db_setup() ->
         try klsn_db:create_db(DB) catch
             error:exists -> ok
         end
-    end, [qna_id, qna_user, qna_ai]),
+    end, [qna_id, qna_user, qna_ai, qna]),
     embe:init_setup(),
     klsn_db:upsert(qna_ip, <<"_design/qna_ip">>, fun(MaybeDoc) ->
         Doc = case MaybeDoc of
