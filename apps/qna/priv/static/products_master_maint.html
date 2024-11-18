@@ -168,9 +168,7 @@
 
     <script>
         const BASE_URI = '/qna/api/v2';
-        let products = []; // 製品データを保持する配列
-        let currentEditProductId = null;
-        let currentEditProductRev = null;
+        let currentRev = null; // revを保持する変数
 
         // UUID生成関数
         var generateUUID = function() {
@@ -183,7 +181,8 @@
         // バージョンフィールド削除関数
         var removeVersionField = function(button) {
             var field = button.parentElement;
-            if (document.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
+            var container = button.parentElement.parentElement;
+            if (container.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
                 field.remove();
             } else {
                 alert('最低1つのバージョンを保持してください。');
@@ -227,10 +226,7 @@
             var editForm = document.getElementById('editProductForm');
             editForm.style.display = 'block';
             document.getElementById('editProductId').value = product.id;
-            currentEditProductRev = product.rev || null;
             document.getElementById('editProductName').value = product.name;
-
-            currentEditProductId = product.id;
 
             // 既存バージョンの表示
             var existingContainer = document.getElementById('existingVersionsContainer');
@@ -251,14 +247,12 @@
         // 編集フォームのリセット関数をグローバルに定義
         var clearEditForm = function() {
             document.getElementById('editProductId').value = '';
-            currentEditProductRev = null;
             document.getElementById('editProductName').value = '';
             var existingContainer = document.getElementById('existingVersionsContainer');
             existingContainer.innerHTML = '';
             var newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = '';
             addVersionField(newVersionsContainer);
-            currentEditProductId = null;
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -283,7 +277,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        products = data.payload.products; // データを更新
+                        products = data.payload.products; // 製品データを更新
+                        currentRev = data.rev || null; // revを更新
                         renderProducts(products);
                     } else {
                         alert('製品データの取得に失敗しました。');
@@ -359,17 +354,23 @@
                     versions: versions
                 };
 
+                var requestBody = {
+                    payload: {
+                        products: [newProduct]
+                    }
+                };
+
+                if(currentRev) {
+                    requestBody.rev = currentRev; // revを追加
+                }
+
                 fetch(BASE_URI + '/master/products', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        payload: {
-                            products: [newProduct]
-                        }
-                    })
+                    body: JSON.stringify(requestBody)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -402,6 +403,12 @@
                     return;
                 }
 
+                if(!currentRev) {
+                    alert('現在のデータバージョンが取得できていません。最新のデータを再取得してください。');
+                    fetchProducts();
+                    return;
+                }
+
                 // 対象製品を配列から検索
                 var existingProduct = products.find(p => p.id === id);
                 if(!existingProduct) {
@@ -415,13 +422,12 @@
                     versions: existingProduct.versions.concat(newVersions)
                 };
 
-                if(existingProduct.rev) {
-                    updatedProduct.rev = existingProduct.rev; // revを追加
-                } else {
-                    alert('製品の現在のバージョン情報がありません。再度取得してください。');
-                    fetchProducts();
-                    return;
-                }
+                var requestBody = {
+                    payload: {
+                        products: [updatedProduct]
+                    },
+                    rev: currentRev // revを必ず指定
+                };
 
                 fetch(BASE_URI + '/master/products', {
                     method: 'POST',
@@ -429,11 +435,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        payload: {
-                            products: [updatedProduct]
-                        }
-                    })
+                    body: JSON.stringify(requestBody)
                 })
                 .then(response => response.json())
                 .then(function(updateData) {
@@ -476,8 +478,6 @@
                 var newVersionsContainer = document.getElementById('editVersionsContainer');
                 newVersionsContainer.innerHTML = '';
                 addVersionField(newVersionsContainer);
-                currentEditProductId = null;
-                currentEditProductRev = null;
             };
 
             // 初期データの取得
