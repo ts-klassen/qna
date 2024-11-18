@@ -1,5 +1,5 @@
 // ページロード時にsheat_idを一度生成して固定
-const sheat_id = generateUUID();
+let sheat_id = generateUUID();
 
 // 使用済みの識別番号を保持する配列
 const usedNos = [];
@@ -76,8 +76,11 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     let no = noInput.value.trim();
     const question = document.getElementById('question').value.trim();
 
+    let isAutoAssigned = false;
+
     // 識別番号が空の場合は自動採番
     if (no === '') {
+        isAutoAssigned = true;
         while (usedNos.includes(String(currentQuestionNo))) {
             currentQuestionNo++;
         }
@@ -148,8 +151,10 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             }
             // 使用済み識別番号リストに追加
             usedNos.push(no);
-            // 次の自動採番番号を更新
-            currentQuestionNo = Math.max(currentQuestionNo, parseInt(no) + 1);
+            // 自動採番された場合のみ次の番号を更新
+            if (isAutoAssigned) {
+                currentQuestionNo++;
+            }
         } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = `エラー: ${result.reason}`;
