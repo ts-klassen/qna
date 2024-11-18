@@ -197,6 +197,21 @@
             `;
         }
 
+        // 編集フォームのリセット関数をグローバルに定義
+        function clearEditForm() {
+            document.getElementById('editProductId').value = '';
+            document.getElementById('editProductName').value = '';
+            const existingContainer = document.getElementById('existingVersionsContainer');
+            existingContainer.innerHTML = '';
+            const newVersionsContainer = document.getElementById('editVersionsContainer');
+            newVersionsContainer.innerHTML = `
+                <div class="version-field">
+                    <input type="text" class="version-input" required>
+                    <button type="button" class="button remove-version-btn">-</button>
+                </div>
+            `;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const productsTableBody = document.querySelector('#productsTable tbody');
             const addProductForm = document.getElementById('addProductForm');
@@ -430,25 +445,9 @@
                 `;
             }
 
-            // 編集フォームのリセット
-            function clearEditForm() {
-                document.getElementById('editProductId').value = '';
-                document.getElementById('editProductName').value = '';
-                const existingContainer = document.getElementById('existingVersionsContainer');
-                existingContainer.innerHTML = '';
-                const newVersionsContainer = document.getElementById('editVersionsContainer');
-                newVersionsContainer.innerHTML = `
-                    <div class="version-field">
-                        <input type="text" class="version-input" required>
-                        <button type="button" class="button remove-version-btn">-</button>
-                    </div>
-                `;
-            }
-
             // 初期データの取得
             fetchProducts();
-        });
-    </script>
+        </script>
 
 </body>
 </html>
