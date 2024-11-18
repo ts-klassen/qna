@@ -76,9 +76,11 @@
         }
         .version-field .remove-version-btn {
             background-color: #dc3545;
-            margin-left: 5px;
+            /* Removed margin-left to align properly */
             padding: 10px 20px; /* Increased padding for consistency */
             width: auto; /* Allow button to size based on content */
+            margin-left: 0; /* Ensure no left margin */
+            align-self: flex-start; /* Align button to the start */
         }
         .version-field .remove-version-btn:hover {
             background-color: #c82333;
