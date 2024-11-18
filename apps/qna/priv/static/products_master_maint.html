@@ -32,13 +32,15 @@
             margin-bottom: 4px;
         }
         .button {
-            padding: 6px 12px;
-            margin-left: 5px; /* スペースを追加 */
+            padding: 10px 20px; /* Increased padding for wider buttons */
             cursor: pointer;
             border: none;
             background-color: #007BFF;
             color: white;
             border-radius: 4px;
+            width: 100%; /* Make buttons full width */
+            box-sizing: border-box;
+            margin-top: 10px; /* Add some space above buttons */
         }
         .button:hover {
             background-color: #0056b3;
@@ -75,9 +77,15 @@
         .version-field .remove-version-btn {
             background-color: #dc3545;
             margin-left: 5px;
+            padding: 10px 20px; /* Increased padding for consistency */
+            width: auto; /* Allow button to size based on content */
         }
         .version-field .remove-version-btn:hover {
             background-color: #c82333;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
@@ -99,8 +107,12 @@
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
-        <button type="button" id="addVersionBtn" class="button">+</button>
-        <button type="button" id="submitAddProductBtn" class="button">追加</button>
+        <div class="form-group">
+            <button type="button" id="addVersionBtn" class="button">＋ バージョンを追加</button>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitAddProductBtn" class="button">追加</button>
+        </div>
     </div>
 
     <!-- 編集フォーム -->
@@ -122,9 +134,15 @@
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
-        <button type="button" id="addEditVersionBtn" class="button">+</button>
-        <button type="button" id="submitEditProductBtn" class="button">保存</button>
-        <button type="button" id="cancelEditProductBtn" class="button">キャンセル</button>
+        <div class="form-group">
+            <button type="button" id="addEditVersionBtn" class="button">＋ バージョンを追加</button>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitEditProductBtn" class="button">保存</button>
+        </div>
+        <div class="form-group">
+            <button type="button" id="cancelEditProductBtn" class="button">キャンセル</button>
+        </div>
     </div>
 
     <!-- 製品一覧テーブル -->
