@@ -67,8 +67,8 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
           "notes": ["Note1", "Note2"],
           "qna_id": "unique_qna_id" // ignored by backend
         },
-        "answer": "This is the answer.",
-        "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"],
+        "answer": "This is the answer.", // optional
+        "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
         "state": "answered", // ignored by backend
         "last_exec": { // ignored by backend
           "type": "embed",
@@ -128,8 +128,8 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "notes": ["Note1", "Note2"],
               "qna_id": "qna_456"
             },
-            "answer": "This is the answer.",
-            "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"],
+            "answer": "This is the answer.", // optional
+            "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
             "state": "answered",
             "last_exec": {
               "type": "embed",
@@ -208,8 +208,8 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "notes": ["Note1", "Note2"],
               "qna_id": "qna_456"
             },
-            "answer": "This is the answer.",
-            "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"],
+            "answer": "This is the answer.", // optional
+            "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
             "state": "answered",
             "last_exec": {
               "type": "embed",
