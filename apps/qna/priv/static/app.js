@@ -16,12 +16,8 @@ class FieldManager {
         input.type = 'text';
         input.name = this.type;
         // titlesは必須ではなくなったため、requiredを削除
-        // 必要に応じて下記カスタマイズ
-        if (this.type === 'titles') {
-            input.required = false;
-        } else {
-            input.required = false; // notesも任意に設定
-        }
+        // notesも任意
+        input.required = false;
 
         const addButton = document.createElement('button');
         addButton.type = 'button';
@@ -64,6 +60,10 @@ const notesManager = new FieldManager('notesContainer', 'notes');
 
 document.getElementById('questionForm').addEventListener('submit', async function(event) {
     event.preventDefault();
+
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = true; // ボタンを無効化
+    submitButton.textContent = '送信中...'; // ボタンテキストを変更
 
     const productNameInput = document.getElementById('productName');
     const productVersionInput = document.getElementById('productVersion');
@@ -131,6 +131,9 @@ document.getElementById('questionForm').addEventListener('submit', async functio
         const messageDiv = document.getElementById('responseMessage');
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'サーバーとの通信中にエラーが発生しました。';
+    } finally {
+        submitButton.disabled = false; // ボタンを再度有効化
+        submitButton.textContent = '質問を登録'; // ボタンテキストを元に戻す
     }
 });
 
