@@ -53,10 +53,13 @@
             border-radius: 4px;
             background-color: #f9f9f9;
         }
-        .version-input {
-            width: 100%; /* 製品名の入力欄と同じ幅 */
+        .input-field {
+            width: 100%; /* 製品名とバージョンの入力欄を同じ幅に */
             margin-bottom: 10px;
             box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .version-field {
             display: flex;
@@ -65,6 +68,9 @@
         }
         .version-field input {
             flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .version-field .remove-version-btn {
             background-color: #dc3545;
@@ -89,12 +95,12 @@
         <h2>新規製品追加</h2>
         <div class="form-group">
             <label for="newProductName">製品名:</label>
-            <input type="text" id="newProductName" required>
+            <input type="text" id="newProductName" class="input-field" required>
         </div>
         <div class="form-group" id="newVersionsContainer">
             <label>バージョン:</label>
             <div class="version-field">
-                <input type="text" class="version-input" required>
+                <input type="text" class="input-field" required>
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
@@ -108,7 +114,7 @@
         <input type="hidden" id="editProductId">
         <div class="form-group">
             <label for="editProductName">製品名:</label>
-            <input type="text" id="editProductName" required>
+            <input type="text" id="editProductName" class="input-field" required>
         </div>
         <div class="form-group" id="existingVersionsContainer">
             <label>既存バージョン:</label><br>
@@ -117,7 +123,7 @@
         <div class="form-group" id="editVersionsContainer">
             <label>新規バージョン追加:</label>
             <div class="version-field">
-                <input type="text" class="version-input" required>
+                <input type="text" class="input-field" required>
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
@@ -191,7 +197,7 @@
             const newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = `
                 <div class="version-field">
-                    <input type="text" class="version-input" required>
+                    <input type="text" class="input-field" required>
                     <button type="button" class="button remove-version-btn">-</button>
                 </div>
             `;
@@ -206,7 +212,7 @@
             const newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = `
                 <div class="version-field">
-                    <input type="text" class="version-input" required>
+                    <input type="text" class="input-field" required>
                     <button type="button" class="button remove-version-btn">-</button>
                 </div>
             `;
@@ -287,7 +293,7 @@
                 div.className = 'version-field';
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.className = 'version-input';
+                input.className = 'input-field';
                 input.required = true;
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
@@ -306,7 +312,7 @@
                 div.className = 'version-field';
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.className = 'version-input';
+                input.className = 'input-field';
                 input.required = true;
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
@@ -321,7 +327,7 @@
             // 新規製品の追加
             submitAddProductBtn.addEventListener('click', () => {
                 const name = document.getElementById('newProductName').value.trim();
-                const versionInputs = document.querySelectorAll('#newVersionsContainer .version-input');
+                const versionInputs = document.querySelectorAll('#newVersionsContainer .input-field');
                 const versions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
                 if(name === '' || versions.length === 0) {
@@ -365,7 +371,7 @@
             submitEditProductBtn.addEventListener('click', () => {
                 const id = document.getElementById('editProductId').value;
                 const name = document.getElementById('editProductName').value.trim();
-                const versionInputs = document.querySelectorAll('#editVersionsContainer .version-input');
+                const versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
                 const newVersions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
                 if(name === '' || newVersions.length === 0) {
@@ -439,7 +445,7 @@
                 const container = document.getElementById('newVersionsContainer');
                 container.innerHTML = `
                     <div class="version-field">
-                        <input type="text" class="version-input" required>
+                        <input type="text" class="input-field" required>
                         <button type="button" class="button remove-version-btn">-</button>
                     </div>
                 `;
@@ -454,7 +460,7 @@
                 const newVersionsContainer = document.getElementById('editVersionsContainer');
                 newVersionsContainer.innerHTML = `
                     <div class="version-field">
-                        <input type="text" class="version-input" required>
+                        <input type="text" class="input-field" required>
                         <button type="button" class="button remove-version-btn">-</button>
                     </div>
                 `;
