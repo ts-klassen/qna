@@ -17,7 +17,7 @@ get(Id) ->
 -spec set(klsn:binstr(), #{}, qna_user:user()) -> ok | conflict.
 set(Id, Data, #{<<"user">>:=UserId}) ->
     try
-        klsn:upsert(?MODULE, Id, fun
+        klsn_db:upsert(?MODULE, Id, fun
             (none) ->
                 case Data of
                     #{<<"rev">>:=_} ->
@@ -31,10 +31,10 @@ set(Id, Data, #{<<"user">>:=UserId}) ->
                 };
             ({value, Doc}) ->
                 case {Doc, Data} of
-                    {#{<<"rev">>:=A},#{<<"rev">>:=B}} when A =/= B ->
-                        erlang:throw({?MODULE, conflict});
-                    _ -> 
-                        ok
+                    {#{<<"_rev">>:=Rev}, #{<<"rev">>:=Rev}} ->
+                        ok;
+                    _ ->
+                        erlang:throw({?MODULE, conflict})
                 end,
                 Doc#{
                     payload => maps:get(<<"payload">>, Data)
