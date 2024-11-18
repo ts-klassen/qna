@@ -153,194 +153,206 @@
         const BASE_URI = '/qna/api/v2';
 
         // UUID生成関数
-        function generateUUID() {
+        var generateUUID = function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
-        }
+        };
 
         // バージョンフィールド削除関数
-        function removeVersionField(button) {
-            const field = button.parentElement;
+        var removeVersionField = function(button) {
+            var field = button.parentElement;
             if (document.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
                 field.remove();
             } else {
                 alert('最低1つのバージョンを保持してください。');
             }
-        }
+        };
 
         // バージョンフィールド追加関数
-        function addVersionField(container) {
-            const div = document.createElement('div');
+        var addVersionField = function(container) {
+            var div = document.createElement('div');
             div.className = 'version-field';
-            const input = document.createElement('input');
+            var input = document.createElement('input');
             input.type = 'text';
             input.className = 'input-field';
             input.required = true;
 
-            const addBtn = document.createElement('button');
+            var addBtn = document.createElement('button');
             addBtn.type = 'button';
             addBtn.className = 'button add-version-btn';
             addBtn.textContent = '+';
-            addBtn.addEventListener('click', () => addVersionField(container));
+            addBtn.addEventListener('click', function() {
+                addVersionField(container);
+            });
 
-            const removeBtn = document.createElement('button');
+            var removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'button remove-version-btn';
             removeBtn.textContent = '-';
-            removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
+            removeBtn.addEventListener('click', function() {
+                removeVersionField(removeBtn);
+            });
 
             div.appendChild(input);
             div.appendChild(addBtn);
             div.appendChild(removeBtn);
             container.appendChild(div);
-        }
+        };
 
         // 編集キャンセル関数
-        function cancelEdit() {
+        var cancelEdit = function() {
             console.log('キャンセルボタンが押されました。');
             document.getElementById('editProductForm').style.display = 'none';
             clearEditForm();
             document.getElementById('addProductForm').style.display = 'block';
-        }
+        };
 
         // 製品編集フォームの表示関数をグローバルに定義
-        function openEditForm(product) {
+        var openEditForm = function(product) {
             // 新規追加フォームを非表示に
             document.getElementById('addProductForm').style.display = 'none';
 
             // 編集フォームを表示
-            const editForm = document.getElementById('editProductForm');
+            var editForm = document.getElementById('editProductForm');
             editForm.style.display = 'block';
             document.getElementById('editProductId').value = product.id;
             document.getElementById('editProductName').value = product.name;
 
             // 既存バージョンの表示
-            const existingContainer = document.getElementById('existingVersionsContainer');
+            var existingContainer = document.getElementById('existingVersionsContainer');
             existingContainer.innerHTML = '';
-            product.versions.forEach(version => {
-                const span = document.createElement('span');
+            product.versions.forEach(function(version) {
+                var span = document.createElement('span');
                 span.className = 'tag';
                 span.textContent = version;
                 existingContainer.appendChild(span);
             });
 
             // 新規バージョン入力欄のリセット
-            const newVersionsContainer = document.getElementById('editVersionsContainer');
+            var newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = '';
             addVersionField(newVersionsContainer);
-        }
+        };
 
         // 編集フォームのリセット関数をグローバルに定義
-        function clearEditForm() {
+        var clearEditForm = function() {
             document.getElementById('editProductId').value = '';
             document.getElementById('editProductName').value = '';
-            const existingContainer = document.getElementById('existingVersionsContainer');
+            var existingContainer = document.getElementById('existingVersionsContainer');
             existingContainer.innerHTML = '';
-            const newVersionsContainer = document.getElementById('editVersionsContainer');
+            var newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = '';
             addVersionField(newVersionsContainer);
-        }
+        };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const productsTableBody = document.querySelector('#productsTable tbody');
-            const addProductForm = document.getElementById('addProductForm');
-            const submitAddProductBtn = document.getElementById('submitAddProductBtn');
-            const addVersionBtn = document.getElementById('addVersionBtn');
+        document.addEventListener('DOMContentLoaded', function() {
+            var productsTableBody = document.querySelector('#productsTable tbody');
+            var addProductForm = document.getElementById('addProductForm');
+            var submitAddProductBtn = document.getElementById('submitAddProductBtn');
+            var addVersionBtn = document.getElementById('addVersionBtn');
 
-            const editProductForm = document.getElementById('editProductForm');
-            const cancelEditProductBtn = document.getElementById('cancelEditProductBtn');
-            const submitEditProductBtn = document.getElementById('submitEditProductBtn');
-            const addEditVersionBtn = document.getElementById('addEditVersionBtn');
+            var editProductForm = document.getElementById('editProductForm');
+            var cancelEditProductBtn = document.getElementById('cancelEditProductBtn');
+            var submitEditProductBtn = document.getElementById('submitEditProductBtn');
+            var addEditVersionBtn = document.getElementById('addEditVersionBtn');
 
             // 製品データの取得と表示
-            function fetchProducts() {
-                fetch(`${BASE_URI}/master/products`, {
+            var fetchProducts = function() {
+                fetch(BASE_URI + '/master/products', {
                     method: 'GET',
                     credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
                     if(data.success) {
                         renderProducts(data.payload.products);
                     } else {
                         alert('製品データの取得に失敗しました。');
                     }
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error fetching products:', error);
                 });
-            }
+            };
 
             // テーブルに製品を表示
-            function renderProducts(products) {
+            var renderProducts = function(products) {
                 productsTableBody.innerHTML = '';
-                products.forEach(product => {
-                    const tr = document.createElement('tr');
+                products.forEach(function(product) {
+                    var tr = document.createElement('tr');
 
-                    const tdId = document.createElement('td');
+                    var tdId = document.createElement('td');
                     tdId.textContent = product.id;
                     tr.appendChild(tdId);
 
-                    const tdName = document.createElement('td');
+                    var tdName = document.createElement('td');
                     tdName.textContent = product.name;
                     tr.appendChild(tdName);
 
-                    const tdVersions = document.createElement('td');
-                    product.versions.forEach(version => {
-                        const span = document.createElement('span');
+                    var tdVersions = document.createElement('td');
+                    product.versions.forEach(function(version) {
+                        var span = document.createElement('span');
                         span.className = 'tag';
                         span.textContent = version;
                         tdVersions.appendChild(span);
                     });
                     tr.appendChild(tdVersions);
 
-                    const tdActions = document.createElement('td');
-                    const editBtn = document.createElement('button');
+                    var tdActions = document.createElement('td');
+                    var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
                     editBtn.className = 'button';
-                    editBtn.addEventListener('click', () => openEditForm(product));
+                    editBtn.addEventListener('click', function() {
+                        openEditForm(product);
+                    });
                     tdActions.appendChild(editBtn);
                     tr.appendChild(tdActions);
 
                     productsTableBody.appendChild(tr);
                 });
-            }
+            };
 
             // 新規追加フォームでバージョンを追加
-            addVersionBtn.addEventListener('click', () => {
-                const container = document.getElementById('newVersionsContainer');
+            addVersionBtn.addEventListener('click', function() {
+                var container = document.getElementById('newVersionsContainer');
                 addVersionField(container);
             });
 
             // 編集フォームでバージョンを追加
-            addEditVersionBtn.addEventListener('click', () => {
-                const container = document.getElementById('editVersionsContainer');
+            addEditVersionBtn.addEventListener('click', function() {
+                var container = document.getElementById('editVersionsContainer');
                 addVersionField(container);
             });
 
             // 新規製品の追加
-            submitAddProductBtn.addEventListener('click', () => {
-                const name = document.getElementById('newProductName').value.trim();
-                const versionInputs = document.querySelectorAll('#newVersionsContainer .input-field');
-                const versions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
+            submitAddProductBtn.addEventListener('click', function() {
+                var name = document.getElementById('newProductName').value.trim();
+                var versionInputs = document.querySelectorAll('#newVersionsContainer .input-field');
+                var versions = Array.prototype.map.call(versionInputs, function(input) {
+                    return input.value.trim();
+                }).filter(function(v) {
+                    return v !== '';
+                });
 
                 if(name === '' || versions.length === 0) {
                     alert('製品名と少なくとも1つのバージョンを入力してください。');
                     return;
                 }
 
-                const newProduct = {
+                var newProduct = {
                     id: generateUUID(),
-                    name,
-                    versions
+                    name: name,
+                    versions: versions
                 };
 
-                fetch(`${BASE_URI}/master/products`, {
+                fetch(BASE_URI + '/master/products', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -352,8 +364,10 @@
                         }
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
                     if(data.success) {
                         fetchProducts();
                         clearAddForm();
@@ -361,17 +375,21 @@
                         alert('製品の追加に失敗しました。原因: ' + data.reason);
                     }
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error adding product:', error);
                 });
             });
 
             // 編集フォームの保存
-            submitEditProductBtn.addEventListener('click', () => {
-                const id = document.getElementById('editProductId').value;
-                const name = document.getElementById('editProductName').value.trim();
-                const versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
-                const newVersions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
+            submitEditProductBtn.addEventListener('click', function() {
+                var id = document.getElementById('editProductId').value;
+                var name = document.getElementById('editProductName').value.trim();
+                var versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
+                var newVersions = Array.prototype.map.call(versionInputs, function(input) {
+                    return input.value.trim();
+                }).filter(function(v) {
+                    return v !== '';
+                });
 
                 if(name === '' || newVersions.length === 0) {
                     alert('製品名と少なくとも1つの新規バージョンを入力してください。');
@@ -379,25 +397,29 @@
                 }
 
                 // 製品データの取得
-                fetch(`${BASE_URI}/master/products`, {
+                fetch(BASE_URI + '/master/products', {
                     method: 'GET',
                     credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
                     if(data.success) {
-                        const existingProduct = data.payload.products.find(p => p.id === id);
+                        var existingProduct = data.payload.products.find(function(p) {
+                            return p.id === id;
+                        });
                         if(existingProduct) {
-                            const updatedProduct = {
-                                id,
-                                name,
-                                versions: [...existingProduct.versions, ...newVersions]
+                            var updatedProduct = {
+                                id: id,
+                                name: name,
+                                versions: existingProduct.versions.concat(newVersions)
                             };
 
-                            fetch(`${BASE_URI}/master/products`, {
+                            fetch(BASE_URI + '/master/products', {
                                 method: 'POST',
                                 credentials: 'same-origin',
                                 headers: {
@@ -409,8 +431,10 @@
                                     }
                                 })
                             })
-                            .then(response => response.json())
-                            .then(updateData => {
+                            .then(function(response) {
+                                return response.json();
+                            })
+                            .then(function(updateData) {
                                 if(updateData.success) {
                                     fetchProducts();
                                     cancelEdit();
@@ -418,7 +442,7 @@
                                     alert('製品の更新に失敗しました。原因: ' + updateData.reason);
                                 }
                             })
-                            .catch(error => {
+                            .catch(function(error) {
                                 console.error('Error updating product:', error);
                             });
                         } else {
@@ -428,34 +452,34 @@
                         alert('製品データの取得に失敗しました。');
                     }
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error fetching products:', error);
                 });
             });
 
             // 編集フォームのキャンセル
-            cancelEditProductBtn.addEventListener('click', () => {
+            cancelEditProductBtn.addEventListener('click', function() {
                 cancelEdit();
             });
 
             // 新規追加フォームのリセット
-            function clearAddForm() {
+            var clearAddForm = function() {
                 document.getElementById('newProductName').value = '';
-                const container = document.getElementById('newVersionsContainer');
+                var container = document.getElementById('newVersionsContainer');
                 container.innerHTML = '';
                 addVersionField(container);
-            }
+            };
 
             // 編集フォームのリセット
-            function clearEditForm() {
+            var clearEditForm = function() {
                 document.getElementById('editProductId').value = '';
                 document.getElementById('editProductName').value = '';
-                const existingContainer = document.getElementById('existingVersionsContainer');
+                var existingContainer = document.getElementById('existingVersionsContainer');
                 existingContainer.innerHTML = '';
-                const newVersionsContainer = document.getElementById('editVersionsContainer');
+                var newVersionsContainer = document.getElementById('editVersionsContainer');
                 newVersionsContainer.innerHTML = '';
                 addVersionField(newVersionsContainer);
-            }
+            };
 
             // 初期データの取得
             fetchProducts();
