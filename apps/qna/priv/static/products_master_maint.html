@@ -77,10 +77,14 @@
         .version-field .remove-version-btn {
             background-color: #dc3545;
             /* Removed margin-left to align properly */
-            padding: 10px 20px; /* Increased padding for consistency */
+            padding: 0 16px; /* Set vertical padding to zero */
+            height: 32px; /* Set a fixed height to match input field */
             width: auto; /* Allow button to size based on content */
             margin: 0; /* Ensure no margin */
             align-self: center; /* Center align button vertically */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .version-field .remove-version-btn:hover {
             background-color: #c82333;
