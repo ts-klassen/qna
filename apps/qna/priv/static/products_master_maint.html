@@ -155,7 +155,7 @@
     <table id="productsTable">
         <thead>
             <tr>
-                <th>製品ID</th>
+                <!-- 製品ID列を削除 -->
                 <th>製品名</th>
                 <th>バージョン</th>
                 <th>操作</th>
@@ -291,9 +291,12 @@
                 products.forEach(function(product) {
                     var tr = document.createElement('tr');
 
+                    // 製品IDの表示を削除
+                    /*
                     var tdId = document.createElement('td');
                     tdId.textContent = product.id;
                     tr.appendChild(tdId);
+                    */
 
                     var tdName = document.createElement('td');
                     tdName.textContent = product.name;
