@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>製品マスタメンテナンス</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+        }
+        button {
+            padding: 7px 15px;
+            margin-right: 5px;
+        }
+    </style>
+    <script>
+        const BASE_URI = '/qna/api/v2';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchProducts();
+            document.getElementById('add-product-form').addEventListener('submit', addProduct);
+        });
+
+        function fetchProducts() {
+            fetch(`${BASE_URI}/master/products`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    displayProducts(data.payload.products);
+                } else {
+                    alert(`エラー: ${data.reason}`);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayProducts(products) {
+            const tbody = document.getElementById('products-table-body');
+            tbody.innerHTML = '';
+            products.forEach(product => {
+                const row = document.createElement('tr');
+
+                const idCell = document.createElement('td');
+                idCell.textContent = product.id;
+                row.appendChild(idCell);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = product.name;
+                row.appendChild(nameCell);
+
+                const versionsCell = document.createElement('td');
+                versionsCell.textContent = product.versions.join(', ');
+                row.appendChild(versionsCell);
+
+                const actionsCell = document.createElement('td');
+
+                const editButton = document.createElement('button');
+                editButton.textContent = '編集';
+                editButton.onclick = () => editProduct(product);
+                actionsCell.appendChild(editButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '削除';
+                deleteButton.onclick = () => deleteProduct(product.id);
+                actionsCell.appendChild(deleteButton);
+
+                row.appendChild(actionsCell);
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+            const name = document.getElementById('product-name').value;
+            const versions = document.getElementById('product-versions').value.split(',').map(v => v.trim());
+            
+            const payload = {
+                payload: {
+                    products: [
+                        {
+                            name: name,
+                            versions: versions
+                        }
+                    ]
+                }
+            };
+
+            fetch(`${BASE_URI}/master/products`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    fetchProducts();
+                    document.getElementById('add-product-form').reset();
+                } else {
+                    alert(`エラー: ${data.reason}`);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function editProduct(product) {
+            const newName = prompt('新しい製品名を入力してください:', product.name);
+            if(newName === null) return;
+
+            const newVersions = prompt('新しいバージョンをカンマ区切りで入力してください:', product.versions.join(', '));
+            if(newVersions === null) return;
+
+            const payload = {
+                payload: {
+                    products: [
+                        {
+                            id: product.id,
+                            name: newName,
+                            versions: newVersions.split(',').map(v => v.trim())
+                        }
+                    ]
+                },
+                rev: product.rev // 必要に応じてrevを設定
+            };
+
+            fetch(`${BASE_URI}/master/products`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    fetchProducts();
+                } else {
+                    alert(`エラー: ${data.reason}`);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteProduct(productId) {
+            if(!confirm('本当にこの製品を削除しますか？')) return;
+
+            // 実際のAPI仕様に削除エンドポイントがないため、ここでは仮の処理を記載
+            alert('削除機能は未実装です。');
+        }
+    </script>
+</head>
+<body>
+    <h1>製品マスタメンテナンス</h1>
+
+    <h2>製品一覧</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>製品名</th>
+                <th>バージョン</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody id="products-table-body">
+            <!-- 製品データがここに表示されます -->
+        </tbody>
+    </table>
+
+    <h2>製品の追加</h2>
+    <form id="add-product-form">
+        <div class="form-group">
+            <label for="product-name">製品名:</label>
+            <input type="text" id="product-name" name="product-name" required>
+        </div>
+        <div class="form-group">
+            <label for="product-versions">バージョン:</label>
+            <input type="text" id="product-versions" name="product-versions" placeholder="例: 1.0.0, 1.0.1" required>
+        </div>
+        <button type="submit">追加</button>
+    </form>
+</body>
+</html>
