@@ -308,6 +308,11 @@
                 addVersionField(container);
             });
 
+            // 既存のremove-version-btnにイベントリスナーを追加
+            document.querySelectorAll('.remove-version-btn').forEach(function(button) {
+                button.addEventListener('click', () => removeVersionField(button));
+            });
+
             // 新規製品の追加
             submitAddProductBtn.addEventListener('click', () => {
                 var name = document.getElementById('newProductName').value.trim();
