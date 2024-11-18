@@ -3,6 +3,7 @@
 -export([
         lookup/1
       , upsert/1
+      , user_upsert/2
       , embed/1
       , search/1
     ]).
@@ -19,10 +20,8 @@
       , embe_metadata => #{
             available => boolean()
           , deleted => boolean()
-          , product => #{
-                name => klsn:binstr()
-              , version => klsn:binstr()
-            }
+          , product_name => klsn:binstr()
+          , product_version => klsn:binstr()
           , sheat_id => klsn:binstr()
           , no => klsn:binstr()
           , ordered_id => non_neg_integer()
@@ -32,7 +31,6 @@
           , notes => [klsn:binstr()]
           , qna_id => id()
         }
-      , embe_collection => atom() | klsn:binstr()
       , answer => klsn:binstr()
       , answer_sup => [klsn:binstr()]
       , state => init | embedded | searched | answered | error
@@ -42,12 +40,25 @@
         }
       , waiting_for => #{
             embed => boolean()
+          , search => boolean()
           , ai_answer => boolean()
         }
       , last_search_result => [id()]
       , qna_version => 1
       , log => [
             #{
+                type => create
+              , time => klsn:binstr()
+              , user => qna_user:user_id()
+              , payload => map()
+            }
+          | #{
+                type => update
+              , time => klsn:binstr()
+              , user => qna_user:user_id()
+              , payload => map()
+            }
+          | #{
                 type => embed
               , time => klsn:binstr()
             }
@@ -66,6 +77,67 @@ normalize(Qna0) ->
 -spec lookup(id()) -> klsn:maybe(qna()).
 lookup(QnaId) ->
     klsn_db:lookup(?MODULE, QnaId).
+
+-spec user_upsert(qna(), qna_user:user()) -> qna().
+user_upsert(Qna0, #{<<"user">>:=UserId}) ->
+    Qna10 = normalize(Qna0),
+    Qna20 = maps:filter(fun
+        (<<"embe_metadata">>, Map) when is_map(Map) -> true;
+        (<<"answer">>, Bin) when is_binary(Bin) -> true;
+        (<<"answer_sup">>, List) when is_list(List) -> true;
+        (<<"waiting_for">>, Map) when is_map(Map) -> true;
+        (<<"_id">>, Bin) when is_binary(Bin) -> true;
+        (<<"_rev">>, Bin) when is_binary(Bin) -> true;
+        (_, _) -> false
+    end, Qna10),
+    Qna30 = maps:map(fun
+        (<<"embe_metadata">>, Map) ->
+            maps:filter(fun
+                (<<"available">>, Bool) when is_boolean(Bool) -> true;
+                (<<"deleted">>, Bool) when is_boolean(Bool) -> true;
+                (<<"product_name">>, Bin) when is_binary(Bin) -> true;
+                (<<"product_version">>, Bin) when is_binary(Bin) -> true;
+                (<<"sheat_id">>, Bin) when is_binary(Bin) -> true;
+                (<<"no">>, Bin) when is_binary(Bin) -> true;
+                (<<"ordered_id">>, Int) when is_integer(Int), Int >= 0 -> true;
+                (<<"titles">>, List) when is_list(List) -> true;
+                (<<"question">>, Bin) when is_binary(Bin) -> true;
+                (<<"notes">>, List) when is_list(List) -> true;
+                (_, _) -> false
+            end, Map);
+        (<<"waiting_for">>, Map) ->
+            maps:filter(fun
+                (<<"embed">>, Bool) when is_boolean(Bool) -> true;
+                (<<"search">>, Bool) when is_boolean(Bool) -> true;
+                (<<"ai_answer">>, Bool) when is_boolean(Bool) -> true;
+                (_, _) -> false
+            end, Map);
+        (_Key, Val) ->
+            Val
+    end, Qna20),
+    #{<<"_id">>:=Id} = upsert(Qna30),
+    BaseLog = #{
+        time => klsn_db:time_now()
+      , user => UserId
+      , payload => Qna30
+    },
+    Log = case Qna10 of
+        #{<<"_id">>:=_, <<"_rev">>:=_} ->
+            BaseLog#{
+                type => update
+            };
+        _ ->
+            BaseLog#{
+                type => create
+            }
+    end,
+    klsn_map:update(?MODULE, Id, fun(Doc) ->
+        Logs = case Doc of
+            #{<<"logs">>:=Logs0} -> Logs0;
+            _ -> []
+        end,
+        Doc#{<<"logs">> => [Log|Logs]}
+    end).
 
 -spec upsert(qna()) -> conflict | qna().
 upsert(Qna0) ->
@@ -96,7 +168,7 @@ upsert(Qna0) ->
                 _ ->
                     ok
             end,
-            maps:merge(Doc, Qna)
+            merge_qna(Doc, Qna)
     end) catch
         throw:{?MODULE, conflict} ->
             conflict
@@ -236,4 +308,17 @@ new_embe() ->
     Embe#{
         embeddings_function => fun qna_ai:text_to_vector/1
     }.
+
+-spec merge_qna(qna(), qna()) -> qna().
+merge_qna(A0, B0) ->
+    A = normalize(A0),
+    B = normalize(B0),
+    maps:map(fun(Key, Val) ->
+        case maps:find(Key, A) of
+            {ok, AVal} when is_map(AVal) ->
+                maps:merge(AVal, Val);
+            _ ->
+                Val
+        end
+    end, maps:merge(A, B)).
 
