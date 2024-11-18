@@ -169,6 +169,7 @@
     <script>
         const BASE_URI = '/qna/api/v2';
         let currentRev = null; // revを保持する変数
+        let products = []; // 既存製品を保持する変数
 
         // UUID生成関数
         var generateUUID = function() {
@@ -354,9 +355,12 @@
                     versions: versions
                 };
 
+                // 既存の製品データに新しい製品を追加
+                var updatedProducts = [...products, newProduct];
+
                 var requestBody = {
                     payload: {
-                        products: [newProduct]
+                        products: updatedProducts
                     }
                 };
 
@@ -422,9 +426,12 @@
                     versions: existingProduct.versions.concat(newVersions)
                 };
 
+                // 更新された製品リストを作成
+                var updatedProducts = products.map(p => p.id === id ? updatedProduct : p);
+
                 var requestBody = {
                     payload: {
-                        products: [updatedProduct]
+                        products: updatedProducts
                     },
                     rev: currentRev // revを必ず指定
                 };
@@ -487,4 +494,3 @@
 
 </body>
 </html>
-
