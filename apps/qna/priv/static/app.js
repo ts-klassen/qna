@@ -1,6 +1,9 @@
 // ページロード時にsheat_idを一度生成して固定
 const sheat_id = generateUUID();
 
+// 使用済みの識別番号を保持する配列
+const usedNos = [];
+
 // フィールド管理クラス
 class FieldManager {
     constructor(containerId, type) {
@@ -15,8 +18,7 @@ class FieldManager {
         const input = document.createElement('input');
         input.type = 'text';
         input.name = this.type;
-        // titlesは必須ではなくなったため、requiredを削除
-        // notesも任意
+        // titlesおよびnotesは必須ではなくなったため、requiredを削除
         input.required = false;
 
         const addButton = document.createElement('button');
@@ -71,6 +73,16 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     const no = noInput.value.trim();
     const question = document.getElementById('question').value.trim();
 
+    // 識別番号の重複チェック
+    if (usedNos.includes(no)) {
+        const messageDiv = document.getElementById('responseMessage');
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = `エラー: 識別番号 "${no}" は既に使用されています。別の番号を入力してください。`;
+        submitButton.disabled = false; // ボタンを再度有効化
+        submitButton.textContent = '質問を登録'; // ボタンテキストを元に戻す
+        return;
+    }
+
     // すべてのタイトル入力フィールドを取得し、空文字列を除外
     const titles = Array.from(document.querySelectorAll('input[name="titles"]'))
                         .map(input => input.value.trim())
@@ -122,6 +134,8 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             if (!productNameInput.disabled && !productVersionInput.disabled) {
                 disableFixedFields(productNameInput, productVersionInput);
             }
+            // 使用済み識別番号リストに追加
+            usedNos.push(no);
         } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = `エラー: ${result.reason}`;
