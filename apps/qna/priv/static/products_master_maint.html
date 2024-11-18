@@ -183,17 +183,13 @@
             addBtn.type = 'button';
             addBtn.className = 'button add-version-btn';
             addBtn.textContent = '+';
-            addBtn.addEventListener('click', function() {
-                addVersionField(container);
-            });
+            addBtn.addEventListener('click', () => addVersionField(container));
 
             var removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'button remove-version-btn';
             removeBtn.textContent = '-';
-            removeBtn.addEventListener('click', function() {
-                removeVersionField(removeBtn);
-            });
+            removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
 
             div.appendChild(input);
             div.appendChild(addBtn);
@@ -247,9 +243,8 @@
             addVersionField(newVersionsContainer);
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             var productsTableBody = document.querySelector('#productsTable tbody');
-            var addProductForm = document.getElementById('addProductForm');
             var submitAddProductBtn = document.getElementById('submitAddProductBtn');
             var addVersionBtn = document.getElementById('addVersionBtn');
 
@@ -267,17 +262,15 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
+                .then(response => response.json())
+                .then(data => {
                     if(data.success) {
                         renderProducts(data.payload.products);
                     } else {
                         alert('製品データの取得に失敗しました。');
                     }
                 })
-                .catch(function(error) {
+                .catch(error => {
                     console.error('Error fetching products:', error);
                 });
             };
@@ -309,9 +302,7 @@
                     var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
                     editBtn.className = 'button';
-                    editBtn.addEventListener('click', function() {
-                        openEditForm(product);
-                    });
+                    editBtn.addEventListener('click', () => openEditForm(product));
                     tdActions.appendChild(editBtn);
                     tr.appendChild(tdActions);
 
@@ -320,26 +311,22 @@
             };
 
             // 新規追加フォームでバージョンを追加
-            addVersionBtn.addEventListener('click', function() {
+            addVersionBtn.addEventListener('click', () => {
                 var container = document.getElementById('newVersionsContainer');
                 addVersionField(container);
             });
 
             // 編集フォームでバージョンを追加
-            addEditVersionBtn.addEventListener('click', function() {
+            addEditVersionBtn.addEventListener('click', () => {
                 var container = document.getElementById('editVersionsContainer');
                 addVersionField(container);
             });
 
             // 新規製品の追加
-            submitAddProductBtn.addEventListener('click', function() {
+            submitAddProductBtn.addEventListener('click', () => {
                 var name = document.getElementById('newProductName').value.trim();
                 var versionInputs = document.querySelectorAll('#newVersionsContainer .input-field');
-                var versions = Array.prototype.map.call(versionInputs, function(input) {
-                    return input.value.trim();
-                }).filter(function(v) {
-                    return v !== '';
-                });
+                var versions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
                 if(name === '' || versions.length === 0) {
                     alert('製品名と少なくとも1つのバージョンを入力してください。');
@@ -364,10 +351,8 @@
                         }
                     })
                 })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
+                .then(response => response.json())
+                .then(data => {
                     if(data.success) {
                         fetchProducts();
                         clearAddForm();
@@ -375,21 +360,17 @@
                         alert('製品の追加に失敗しました。原因: ' + data.reason);
                     }
                 })
-                .catch(function(error) {
+                .catch(error => {
                     console.error('Error adding product:', error);
                 });
             });
 
             // 編集フォームの保存
-            submitEditProductBtn.addEventListener('click', function() {
+            submitEditProductBtn.addEventListener('click', () => {
                 var id = document.getElementById('editProductId').value;
                 var name = document.getElementById('editProductName').value.trim();
                 var versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
-                var newVersions = Array.prototype.map.call(versionInputs, function(input) {
-                    return input.value.trim();
-                }).filter(function(v) {
-                    return v !== '';
-                });
+                var newVersions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
                 if(name === '' || newVersions.length === 0) {
                     alert('製品名と少なくとも1つの新規バージョンを入力してください。');
@@ -404,14 +385,10 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
+                .then(response => response.json())
+                .then(data => {
                     if(data.success) {
-                        var existingProduct = data.payload.products.find(function(p) {
-                            return p.id === id;
-                        });
+                        var existingProduct = data.payload.products.find(p => p.id === id);
                         if(existingProduct) {
                             var updatedProduct = {
                                 id: id,
@@ -431,10 +408,8 @@
                                     }
                                 })
                             })
-                            .then(function(response) {
-                                return response.json();
-                            })
-                            .then(function(updateData) {
+                            .then(response => response.json())
+                            .then(updateData => {
                                 if(updateData.success) {
                                     fetchProducts();
                                     cancelEdit();
@@ -442,7 +417,7 @@
                                     alert('製品の更新に失敗しました。原因: ' + updateData.reason);
                                 }
                             })
-                            .catch(function(error) {
+                            .catch(error => {
                                 console.error('Error updating product:', error);
                             });
                         } else {
@@ -452,13 +427,13 @@
                         alert('製品データの取得に失敗しました。');
                     }
                 })
-                .catch(function(error) {
+                .catch(error => {
                     console.error('Error fetching products:', error);
                 });
             });
 
             // 編集フォームのキャンセル
-            cancelEditProductBtn.addEventListener('click', function() {
+            cancelEditProductBtn.addEventListener('click', () => {
                 cancelEdit();
             });
 
