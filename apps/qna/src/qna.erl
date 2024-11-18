@@ -131,7 +131,7 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
                 type => create
             }
     end,
-    klsn_map:update(?MODULE, Id, fun(Doc) ->
+    klsn_db:update(?MODULE, Id, fun(Doc) ->
         Logs = case Doc of
             #{<<"logs">>:=Logs0} -> Logs0;
             _ -> []
