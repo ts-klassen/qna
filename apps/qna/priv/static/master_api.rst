@@ -54,7 +54,7 @@ QNA Master HTTP API は、マスタデータの取得とメンテナンスをす
               "products": [
                   {
                       "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
-                      "name": "product_name",
+                      "name": "product_id",
                       "versions": ["1.0.0", "1.0.1", "1.1.0"]
                   }
               ]
@@ -91,7 +91,7 @@ QNA Master HTTP API は、マスタデータの取得とメンテナンスをす
               "products": [
                   {
                       "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
-                      "name": "product_name",
+                      "name": "product_id",
                       "versions": ["1.0.0", "1.0.1", "1.1.0"]
                   },
                   // ここに既存の製品も含めてください

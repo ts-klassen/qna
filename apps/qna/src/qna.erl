@@ -20,7 +20,7 @@
       , embe_metadata => #{
             available => boolean()
           , deleted => boolean()
-          , product_name => klsn:binstr()
+          , product_id => klsn:binstr()
           , product_version => klsn:binstr()
           , sheat_id => klsn:binstr()
           , no => klsn:binstr()
@@ -95,7 +95,7 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
             maps:filter(fun
                 (<<"available">>, Bool) when is_boolean(Bool) -> true;
                 (<<"deleted">>, Bool) when is_boolean(Bool) -> true;
-                (<<"product_name">>, Bin) when is_binary(Bin) -> true;
+                (<<"product_id">>, Bin) when is_binary(Bin) -> true;
                 (<<"product_version">>, Bin) when is_binary(Bin) -> true;
                 (<<"sheat_id">>, Bin) when is_binary(Bin) -> true;
                 (<<"no">>, Bin) when is_binary(Bin) -> true;

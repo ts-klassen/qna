@@ -37,8 +37,8 @@ set(Id, Data, #{<<"user">>:=UserId}) ->
                         erlang:throw({?MODULE, conflict})
                 end,
                 Doc#{
-                    payload => maps:get(<<"payload">>, Data)
-                  , last_updated_by => UserId
+                    <<"payload">> => maps:get(<<"payload">>, Data)
+                  , <<"last_updated_by">> => UserId
                 }
         end)
     of

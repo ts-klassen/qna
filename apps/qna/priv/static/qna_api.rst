@@ -56,7 +56,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
         "embe_metadata": {
           "available": true,
           "deleted": false,
-          "product_name": "ProductX",
+          "product_id": "ProductX",
           "product_version": "1.0.0", // string
           "sheat_id": "sheat_123",
           "no": "001",
@@ -117,7 +117,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             "embe_metadata": {
               "available": true,
               "deleted": false,
-              "product_name": "ProductX",
+              "product_id": "ProductX",
               "product_version": "1.0.0",
               "sheat_id": "sheat_123",
               "no": "001",
@@ -197,7 +197,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             "embe_metadata": {
               "available": true,
               "deleted": false,
-              "product_name": "ProductX",
+              "product_id": "ProductX",
               "product_version": "1.0.0",
               "sheat_id": "sheat_123",
               "no": "001",
