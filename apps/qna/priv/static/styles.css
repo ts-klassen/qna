@@ -23,6 +23,12 @@ textarea {
     box-sizing: border-box;
 }
 
+select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
 .dynamic-field {
     display: flex;
     align-items: center;

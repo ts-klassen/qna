@@ -89,7 +89,7 @@ async function initializeProductData() {
 }
 
 function populateProductSelect(products) {
-    const productSelect = document.getElementById('productName');
+    const productSelect = document.getElementById('productId');
     products.forEach(product => {
         const option = document.createElement('option');
         option.value = product.id;
@@ -124,7 +124,7 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     submitButton.disabled = true; // ボタンを無効化
     submitButton.textContent = '送信中...'; // ボタンテキストを変更
 
-    const productIdInput = document.getElementById('productName');
+    const productIdInput = document.getElementById('productId');
     const productVersionInput = document.getElementById('productVersion');
     const noInput = document.getElementById('questionNo');
     let no = noInput.value.trim();
