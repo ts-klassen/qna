@@ -9,9 +9,9 @@ db_setup() ->
         try klsn_db:create_db(DB) catch
             error:exists -> ok
         end
-    end, [qna_id, qna_user, qna_ai, qna]),
+    end, [qna_ip, qna_user, qna_ai, qna]),
     embe:init_setup(),
-    klsn_db:upsert(qna_ip, <<"_design/qna_ip">>, fun(MaybeDoc) ->
+    klsn_db:upsert(qna_ip, {raw, <<"_design/qna_ip">>}, fun(MaybeDoc) ->
         Doc = case MaybeDoc of
             {value, Doc0} -> Doc0;
             none -> #{}
@@ -25,7 +25,7 @@ db_setup() ->
           , <<"language">> => <<"javascript">>
         }
     end),
-    klsn_db:upsert(qna_user, <<"_design/qna_user">>, fun(MaybeDoc) ->
+    klsn_db:upsert(qna_user, {raw, <<"_design/qna_user">>}, fun(MaybeDoc) ->
         Doc = case MaybeDoc of
             {value, Doc0} -> Doc0;
             none -> #{}
@@ -39,7 +39,7 @@ db_setup() ->
           , <<"language">> => <<"javascript">>
         }
     end),
-    klsn_db:upsert(qna_ai, <<"_design/qna_ai">>, fun(MaybeDoc) ->
+    klsn_db:upsert(qna_ai, {raw, <<"_design/qna_ai">>}, fun(MaybeDoc) ->
         Doc = case MaybeDoc of
             {value, Doc0} -> Doc0;
             none -> #{}

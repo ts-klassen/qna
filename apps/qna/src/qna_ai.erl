@@ -3,6 +3,7 @@
 -export([
         new/1
       , ask/2
+      , text_to_vector/1
       , text_to_vector/2
       , calc_cost_js/0
       , cost/1
@@ -52,6 +53,10 @@ ask(Text, #{chat := Chat0, info := Info}) ->
       , version => 1
     }),
     {Res, #{ chat => Chat10, info => Info}}.
+
+-spec text_to_vector(klsn:binstr()) -> embe_vector_db:vector().
+text_to_vector(Text) ->
+    text_to_vector(Text, #{}).
 
 -spec text_to_vector(
         klsn:binstr(), text_to_vector_opts()
