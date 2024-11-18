@@ -4,6 +4,9 @@ const sheat_id = generateUUID();
 // 使用済みの識別番号を保持する配列
 const usedNos = [];
 
+// 次に採番する識別番号
+let currentQuestionNo = 1;
+
 // フィールド管理クラス
 class FieldManager {
     constructor(containerId, type) {
@@ -47,7 +50,7 @@ class FieldManager {
     }
 
     clearFields() {
-        // 見出し titles はクリアしない
+        // 見出し titles はクリアせず、備考 notes のみクリア
         if (this.type === 'notes') {
             const notesInputs = this.container.querySelectorAll(`input[name="${this.type}"]`);
             notesInputs.forEach(input => {
@@ -70,8 +73,17 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     const productNameInput = document.getElementById('productName');
     const productVersionInput = document.getElementById('productVersion');
     const noInput = document.getElementById('questionNo');
-    const no = noInput.value.trim();
+    let no = noInput.value.trim();
     const question = document.getElementById('question').value.trim();
+
+    // 識別番号が空の場合は自動採番
+    if (no === '') {
+        while (usedNos.includes(String(currentQuestionNo))) {
+            currentQuestionNo++;
+        }
+        no = String(currentQuestionNo);
+        noInput.value = no;
+    }
 
     // 識別番号の重複チェック
     if (usedNos.includes(no)) {
@@ -136,6 +148,8 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             }
             // 使用済み識別番号リストに追加
             usedNos.push(no);
+            // 次の自動採番番号を更新
+            currentQuestionNo = Math.max(currentQuestionNo, parseInt(no) + 1);
         } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = `エラー: ${result.reason}`;
