@@ -125,6 +125,7 @@
     <div id="editProductForm" style="display: none;">
         <h2>製品編集</h2>
         <input type="hidden" id="editProductId">
+        <input type="hidden" id="editProductRev"> <!-- revを保持するための隠しフィールド -->
         <div class="form-group">
             <label for="editProductName">製品名:</label>
             <input type="text" id="editProductName" class="input-field" required>
@@ -224,6 +225,7 @@
             var editForm = document.getElementById('editProductForm');
             editForm.style.display = 'block';
             document.getElementById('editProductId').value = product.id;
+            document.getElementById('editProductRev').value = product.rev || ''; // revを設定
             document.getElementById('editProductName').value = product.name;
 
             // 既存バージョンの表示
@@ -245,6 +247,7 @@
         // 編集フォームのリセット関数をグローバルに定義
         var clearEditForm = function() {
             document.getElementById('editProductId').value = '';
+            document.getElementById('editProductRev').value = '';
             document.getElementById('editProductName').value = '';
             var existingContainer = document.getElementById('existingVersionsContainer');
             existingContainer.innerHTML = '';
@@ -384,6 +387,7 @@
             // 編集フォームの保存
             submitEditProductBtn.addEventListener('click', () => {
                 var id = document.getElementById('editProductId').value;
+                var rev = document.getElementById('editProductRev').value; // revを取得
                 var name = document.getElementById('editProductName').value.trim();
                 var versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
                 var newVersions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
@@ -413,6 +417,9 @@
                                 name: name,
                                 versions: existingProduct.versions.concat(newVersions)
                             };
+                            if(existingProduct.rev) {
+                                updatedProduct.rev = existingProduct.rev; // revを追加
+                            }
 
                             fetch(BASE_URI + '/master/products', {
                                 method: 'POST',
@@ -471,6 +478,7 @@
             // 編集フォームのリセット
             var clearEditForm = function() {
                 document.getElementById('editProductId').value = '';
+                document.getElementById('editProductRev').value = '';
                 document.getElementById('editProductName').value = '';
                 var existingContainer = document.getElementById('existingVersionsContainer');
                 existingContainer.innerHTML = '';
