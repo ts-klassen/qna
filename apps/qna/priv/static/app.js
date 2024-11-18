@@ -52,9 +52,9 @@ document.getElementById('questionForm').addEventListener('submit', async functio
         if (result.success) {
             messageDiv.style.color = 'green';
             messageDiv.textContent = '質問が正常に登録されました。';
-            document.getElementById('questionForm').reset();
-            // フォームリセット後に初期のフィールドを1つ保持
-            resetDynamicFields();
+            // 質問主文と備考のみをクリア
+            document.getElementById('question').value = '';
+            clearNotesFields();
         } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = `エラー: ${result.reason}`;
@@ -117,61 +117,10 @@ function removeField(button) {
     }
 }
 
-// フォームリセット後に動的フィールドを初期化
-function resetDynamicFields() {
-    const titlesContainer = document.getElementById('titlesContainer');
-    const notesContainer = document.getElementById('notesContainer');
-
-    // タイトルフィールドのリセット
-    titlesContainer.innerHTML = '';
-    const initialTitleDiv = document.createElement('div');
-    initialTitleDiv.className = 'dynamic-field';
-
-    const titleInput = document.createElement('input');
-    titleInput.type = 'text';
-    titleInput.name = 'titles';
-    titleInput.required = true;
-
-    const addTitleButton = document.createElement('button');
-    addTitleButton.type = 'button';
-    addTitleButton.className = 'add-button';
-    addTitleButton.textContent = '+';
-    addTitleButton.onclick = () => addField('titles');
-
-    const removeTitleButton = document.createElement('button');
-    removeTitleButton.type = 'button';
-    removeTitleButton.className = 'remove-button';
-    removeTitleButton.textContent = '−';
-    removeTitleButton.onclick = function() { removeField(this); };
-
-    initialTitleDiv.appendChild(titleInput);
-    initialTitleDiv.appendChild(addTitleButton);
-    initialTitleDiv.appendChild(removeTitleButton);
-    titlesContainer.appendChild(initialTitleDiv);
-
-    // 備考フィールドのリセット
-    notesContainer.innerHTML = '';
-    const initialNotesDiv = document.createElement('div');
-    initialNotesDiv.className = 'dynamic-field';
-
-    const notesInput = document.createElement('input');
-    notesInput.type = 'text';
-    notesInput.name = 'notes';
-
-    const addNotesButton = document.createElement('button');
-    addNotesButton.type = 'button';
-    addNotesButton.className = 'add-button';
-    addNotesButton.textContent = '+';
-    addNotesButton.onclick = () => addField('notes');
-
-    const removeNotesButton = document.createElement('button');
-    removeNotesButton.type = 'button';
-    removeNotesButton.className = 'remove-button';
-    removeNotesButton.textContent = '−';
-    removeNotesButton.onclick = function() { removeField(this); };
-
-    initialNotesDiv.appendChild(notesInput);
-    initialNotesDiv.appendChild(addNotesButton);
-    initialNotesDiv.appendChild(removeNotesButton);
-    notesContainer.appendChild(initialNotesDiv);
+// 備考フィールドをクリアする関数
+function clearNotesFields() {
+    const notesInputs = document.querySelectorAll('input[name="notes"]');
+    notesInputs.forEach(input => {
+        input.value = '';
+    });
 }
