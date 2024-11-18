@@ -95,11 +95,11 @@
             <label>バージョン:</label>
             <div class="version-field">
                 <input type="text" class="version-input" required>
-                <button class="button remove-version-btn">-</button>
+                <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
-        <button id="addVersionBtn" class="button">+</button>
-        <button id="submitAddProductBtn" class="button">追加</button>
+        <button type="button" id="addVersionBtn" class="button">+</button>
+        <button type="button" id="submitAddProductBtn" class="button">追加</button>
     </div>
 
     <!-- 編集フォーム -->
@@ -118,12 +118,12 @@
             <label>新規バージョン追加:</label>
             <div class="version-field">
                 <input type="text" class="version-input" required>
-                <button class="button remove-version-btn">-</button>
+                <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
-        <button id="addEditVersionBtn" class="button">+</button>
-        <button id="submitEditProductBtn" class="button">保存</button>
-        <button id="cancelEditProductBtn" class="button">キャンセル</button>
+        <button type="button" id="addEditVersionBtn" class="button">+</button>
+        <button type="button" id="submitEditProductBtn" class="button">保存</button>
+        <button type="button" id="cancelEditProductBtn" class="button">キャンセル</button>
     </div>
 
     <!-- 製品一覧テーブル -->
@@ -160,6 +160,7 @@
 
         // 編集キャンセル関数
         function cancelEdit() {
+            console.log('キャンセルボタンが押されました。');
             document.getElementById('editProductForm').style.display = 'none';
             clearEditForm();
             document.getElementById('addProductForm').style.display = 'block';
@@ -191,7 +192,7 @@
             newVersionsContainer.innerHTML = `
                 <div class="version-field">
                     <input type="text" class="version-input" required>
-                    <button class="button remove-version-btn">-</button>
+                    <button type="button" class="button remove-version-btn">-</button>
                 </div>
             `;
         }
@@ -274,6 +275,26 @@
                 input.className = 'version-input';
                 input.required = true;
                 const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'button remove-version-btn';
+                removeBtn.textContent = '-';
+                removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
+                div.appendChild(input);
+                div.appendChild(removeBtn);
+                container.appendChild(div);
+            });
+
+            // 編集フォームでバージョンを追加
+            addEditVersionBtn.addEventListener('click', () => {
+                const container = document.getElementById('editVersionsContainer');
+                const div = document.createElement('div');
+                div.className = 'version-field';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'version-input';
+                input.required = true;
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
                 removeBtn.className = 'button remove-version-btn';
                 removeBtn.textContent = '-';
                 removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
@@ -325,37 +346,7 @@
                 });
             });
 
-            // 新規追加フォームのリセット
-            function clearAddForm() {
-                document.getElementById('newProductName').value = '';
-                const container = document.getElementById('newVersionsContainer');
-                container.innerHTML = `
-                    <div class="version-field">
-                        <input type="text" class="version-input" required>
-                        <button class="button remove-version-btn">-</button>
-                    </div>
-                `;
-            }
-
-            // 編集フォームでバージョンを追加
-            addEditVersionBtn.addEventListener('click', () => {
-                const container = document.getElementById('editVersionsContainer');
-                const div = document.createElement('div');
-                div.className = 'version-field';
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'version-input';
-                input.required = true;
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'button remove-version-btn';
-                removeBtn.textContent = '-';
-                removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
-                div.appendChild(input);
-                div.appendChild(removeBtn);
-                container.appendChild(div);
-            });
-
-            // 製品の編集保存
+            // 編集フォームの保存
             submitEditProductBtn.addEventListener('click', () => {
                 const id = document.getElementById('editProductId').value;
                 const name = document.getElementById('editProductName').value.trim();
@@ -422,6 +413,23 @@
                 });
             });
 
+            // 編集フォームのキャンセル
+            cancelEditProductBtn.addEventListener('click', () => {
+                cancelEdit();
+            });
+
+            // 新規追加フォームのリセット
+            function clearAddForm() {
+                document.getElementById('newProductName').value = '';
+                const container = document.getElementById('newVersionsContainer');
+                container.innerHTML = `
+                    <div class="version-field">
+                        <input type="text" class="version-input" required>
+                        <button type="button" class="button remove-version-btn">-</button>
+                    </div>
+                `;
+            }
+
             // 編集フォームのリセット
             function clearEditForm() {
                 document.getElementById('editProductId').value = '';
@@ -432,7 +440,7 @@
                 newVersionsContainer.innerHTML = `
                     <div class="version-field">
                         <input type="text" class="version-input" required>
-                        <button class="button remove-version-btn">-</button>
+                        <button type="button" class="button remove-version-btn">-</button>
                     </div>
                 `;
             }
