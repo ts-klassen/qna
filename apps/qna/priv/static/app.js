@@ -1,8 +1,11 @@
+// ページロード時にsheat_idを一度生成して固定
+const sheat_id = generateUUID();
+
 document.getElementById('questionForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
-    const productName = document.getElementById('productName').value.trim();
-    const productVersion = document.getElementById('productVersion').value.trim();
+    const productNameInput = document.getElementById('productName');
+    const productVersionInput = document.getElementById('productVersion');
     const no = document.getElementById('questionNo').value.trim();
     const question = document.getElementById('question').value.trim();
 
@@ -16,13 +19,10 @@ document.getElementById('questionForm').addEventListener('submit', async functio
                         .map(input => input.value.trim())
                         .filter(note => note !== '');
 
-    // 質問表IDを生成（例としてUUIDを使用）
-    const sheat_id = generateUUID();
-
     const qnaData = {
         embe_metadata: {
-            product_name: productName,
-            product_version: productVersion,
+            product_name: productNameInput.value.trim(),
+            product_version: productVersionInput.value.trim(),
             sheat_id: sheat_id,
             no: no,
             titles: titles,
@@ -55,6 +55,8 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             // 質問主文と備考のみをクリア
             document.getElementById('question').value = '';
             clearNotesFields();
+            // 初回送信後に製品名とバージョンをdisabledにする
+            disableFixedFields(productNameInput, productVersionInput);
         } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = `エラー: ${result.reason}`;
@@ -123,4 +125,10 @@ function clearNotesFields() {
     notesInputs.forEach(input => {
         input.value = '';
     });
+}
+
+// 製品名と製品バージョンのフィールドをdisabledにする関数
+function disableFixedFields(productNameInput, productVersionInput) {
+    productNameInput.disabled = true;
+    productVersionInput.disabled = true;
 }
