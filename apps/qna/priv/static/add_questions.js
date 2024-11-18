@@ -63,6 +63,60 @@ class FieldManager {
 const titlesManager = new FieldManager('titlesContainer', 'titles');
 const notesManager = new FieldManager('notesContainer', 'notes');
 
+// 製品データの取得とセレクトボックスの初期化
+async function initializeProductData() {
+    try {
+        const response = await fetch('/qna/api/v2/master/products', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.payload && result.payload.products) {
+            populateProductSelect(result.payload.products);
+        } else {
+            console.error('製品データの取得に失敗しました。');
+            showErrorMessage('製品データの取得に失敗しました。ページをリロードして再試行してください。');
+        }
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        showErrorMessage('製品データの取得中にエラーが発生しました。');
+    }
+}
+
+function populateProductSelect(products) {
+    const productSelect = document.getElementById('productName');
+    products.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = product.name;
+        productSelect.appendChild(option);
+    });
+
+    // イベントリスナーを追加してバージョンを更新
+    productSelect.addEventListener('change', function() {
+        const selectedProductId = this.value;
+        const selectedProduct = products.find(p => p.id === selectedProductId);
+        populateVersionSelect(selectedProduct ? selectedProduct.versions : []);
+    });
+}
+
+function populateVersionSelect(versions) {
+    const versionSelect = document.getElementById('productVersion');
+    // 既存のオプションをクリア
+    versionSelect.innerHTML = '<option value="">選択してください</option>';
+    versions.forEach(version => {
+        const option = document.createElement('option');
+        option.value = version;
+        option.textContent = version;
+        versionSelect.appendChild(option);
+    });
+}
+
 document.getElementById('questionForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
@@ -70,7 +124,7 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     submitButton.disabled = true; // ボタンを無効化
     submitButton.textContent = '送信中...'; // ボタンテキストを変更
 
-    const productNameInput = document.getElementById('productName');
+    const productIdInput = document.getElementById('productName');
     const productVersionInput = document.getElementById('productVersion');
     const noInput = document.getElementById('questionNo');
     let no = noInput.value.trim();
@@ -110,7 +164,7 @@ document.getElementById('questionForm').addEventListener('submit', async functio
 
     const qnaData = {
         embe_metadata: {
-            product_name: productNameInput.value.trim(),
+            product_id: productIdInput.value.trim(),
             product_version: productVersionInput.value.trim(),
             sheat_id: sheat_id,
             no: no,
@@ -146,8 +200,8 @@ document.getElementById('questionForm').addEventListener('submit', async functio
             document.getElementById('question').value = '';
             notesManager.clearFields();
             // 製品名とバージョンをdisabledにする
-            if (!productNameInput.disabled && !productVersionInput.disabled) {
-                disableFixedFields(productNameInput, productVersionInput);
+            if (!productIdInput.disabled && !productVersionInput.disabled) {
+                disableFixedFields(productIdInput, productVersionInput);
             }
             // 使用済み識別番号リストに追加
             usedNos.push(no);
@@ -200,7 +254,17 @@ function removeField(button) {
 }
 
 // 製品名と製品バージョンのフィールドをdisabledにする関数
-function disableFixedFields(productNameInput, productVersionInput) {
-    productNameInput.disabled = true;
+function disableFixedFields(productIdInput, productVersionInput) {
+    productIdInput.disabled = true;
     productVersionInput.disabled = true;
 }
+
+// エラーメッセージを表示する関数
+function showErrorMessage(message) {
+    const messageDiv = document.getElementById('responseMessage');
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = message;
+}
+
+// ページロード時に製品データを初期化
+document.addEventListener('DOMContentLoaded', initializeProductData);
