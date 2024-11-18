@@ -183,10 +183,15 @@
         var removeVersionField = function(button) {
             var field = button.parentElement;
             var container = button.parentElement.parentElement;
-            if (container.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
-                field.remove();
+            if (container.id === 'newVersionsContainer') {
+                if (container.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
+                    field.remove();
+                } else {
+                    alert('最低1つのバージョンを保持してください。');
+                }
             } else {
-                alert('最低1つのバージョンを保持してください。');
+                // 編集フォームではバージョンの数に制限なし
+                field.remove();
             }
         };
 
@@ -239,7 +244,7 @@
                 existingContainer.appendChild(span);
             });
 
-            // リセットして新規バージョン入力欄を追加
+            // 新規バージョン入力欄のリセット
             var newVersionsContainer = document.getElementById('editVersionsContainer');
             newVersionsContainer.innerHTML = '';
             addVersionField(newVersionsContainer);
@@ -423,7 +428,7 @@
                 var updatedProduct = {
                     id: id,
                     name: name,
-                    versions: existingProduct.versions.concat(newVersions)
+                    versions: existingProduct.versions.concat(newVersions) // バージョンは追加のみ
                 };
 
                 // 更新された製品リストを作成
