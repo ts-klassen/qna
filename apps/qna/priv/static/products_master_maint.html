@@ -101,7 +101,6 @@
         </div>
         <button id="addVersionBtn" class="button">+</button>
         <button id="submitAddProductBtn" class="button">追加</button>
-        <button id="cancelAddProductBtn" class="button" onclick="clearAddForm()">キャンセル</button>
     </div>
 
     <!-- 編集フォーム -->
@@ -170,7 +169,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const productsTableBody = document.querySelector('#productsTable tbody');
             const addProductForm = document.getElementById('addProductForm');
-            const cancelAddProductBtn = document.getElementById('cancelAddProductBtn');
             const submitAddProductBtn = document.getElementById('submitAddProductBtn');
             const addVersionBtn = document.getElementById('addVersionBtn');
 
@@ -235,11 +233,6 @@
                     productsTableBody.appendChild(tr);
                 });
             }
-
-            // 新規追加フォームのキャンセル
-            cancelAddProductBtn.addEventListener('click', () => {
-                clearAddForm();
-            });
 
             // 新規追加フォームでバージョンを追加
             addVersionBtn.addEventListener('click', () => {
@@ -312,9 +305,6 @@
                         <button class="button remove-version-btn" onclick="removeVersionField(this)">-</button>
                     </div>
                 `;
-                // Ensure addProductForm is displayed and editProductForm is hidden
-                addProductForm.style.display = 'block';
-                editProductForm.style.display = 'none';
             }
 
             // 編集フォームの表示
