@@ -388,7 +388,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        var existingProduct = data.payload.products.find(p => p.id === id);
+                        var existingProduct = data.payload.products.find(function(p) {
+                            return p.id === id;
+                        });
                         if(existingProduct) {
                             var updatedProduct = {
                                 id: id,
@@ -409,7 +411,7 @@
                                 })
                             })
                             .then(response => response.json())
-                            .then(updateData => {
+                            .then(function(updateData) {
                                 if(updateData.success) {
                                     fetchProducts();
                                     cancelEdit();
@@ -417,7 +419,7 @@
                                     alert('製品の更新に失敗しました。原因: ' + updateData.reason);
                                 }
                             })
-                            .catch(error => {
+                            .catch(function(error) {
                                 console.error('Error updating product:', error);
                             });
                         } else {
@@ -427,7 +429,7 @@
                         alert('製品データの取得に失敗しました。');
                     }
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error fetching products:', error);
                 });
             });
