@@ -72,13 +72,6 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-        .version-field .add-version-btn {
-            background-color: #28a745;
-            margin-left: 5px;
-        }
-        .version-field .add-version-btn:hover {
-            background-color: #218838;
-        }
         .version-field .remove-version-btn {
             background-color: #dc3545;
             margin-left: 5px;
@@ -103,10 +96,10 @@
             <label>バージョン:</label>
             <div class="version-field">
                 <input type="text" class="input-field" required>
-                <button type="button" class="button add-version-btn">+</button>
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
+        <button type="button" id="addVersionBtn" class="button">+</button>
         <button type="button" id="submitAddProductBtn" class="button">追加</button>
     </div>
 
@@ -126,10 +119,10 @@
             <label>新規バージョン追加:</label>
             <div class="version-field">
                 <input type="text" class="input-field" required>
-                <button type="button" class="button add-version-btn">+</button>
                 <button type="button" class="button remove-version-btn">-</button>
             </div>
         </div>
+        <button type="button" id="addEditVersionBtn" class="button">+</button>
         <button type="button" id="submitEditProductBtn" class="button">保存</button>
         <button type="button" id="cancelEditProductBtn" class="button">キャンセル</button>
     </div>
@@ -179,12 +172,6 @@
             input.className = 'input-field';
             input.required = true;
 
-            var addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.className = 'button add-version-btn';
-            addBtn.textContent = '+';
-            addBtn.addEventListener('click', () => addVersionField(container));
-
             var removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'button remove-version-btn';
@@ -192,7 +179,6 @@
             removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
 
             div.appendChild(input);
-            div.appendChild(addBtn);
             div.appendChild(removeBtn);
             container.appendChild(div);
         };
@@ -460,7 +446,8 @@
 
             // 初期データの取得
             fetchProducts();
-        </script>
+        });
+    </script>
 
 </body>
 </html>
