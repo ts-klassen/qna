@@ -48,6 +48,20 @@ main(<<"POST">>, #{arg1 := <<"qna">>, arg2 := <<"lookup">>}, _, #{<<"id">>:=Id})
     end;
 
 
+main(<<"GET">>, #{arg1 := <<"master">>, arg2 := Id}, _, _) ->
+    Master = qna_master:get(Id),
+    Master#{ success => true };
+
+
+main(<<"POST">>, #{arg1 := <<"master">>, arg2 := Id}, User, Payload) ->
+    case qna_master:set(Id, Payload, User) of
+        conflict ->
+            #{success => false, reason => conflict};
+        ok ->
+            #{success => true}
+    end;
+
+
 
 main(_, _, _, _) ->
     #{ success => false, reason => clause_error }.
