@@ -15,7 +15,13 @@ class FieldManager {
         const input = document.createElement('input');
         input.type = 'text';
         input.name = this.type;
-        input.required = this.type === 'titles'; // titlesは必須、notesは任意
+        // titlesは必須ではなくなったため、requiredを削除
+        // 必要に応じて下記カスタマイズ
+        if (this.type === 'titles') {
+            input.required = false;
+        } else {
+            input.required = false; // notesも任意に設定
+        }
 
         const addButton = document.createElement('button');
         addButton.type = 'button';
@@ -65,12 +71,12 @@ document.getElementById('questionForm').addEventListener('submit', async functio
     const no = noInput.value.trim();
     const question = document.getElementById('question').value.trim();
 
-    // すべてのタイトル入力フィールドを取得
+    // すべてのタイトル入力フィールドを取得し、空文字列を除外
     const titles = Array.from(document.querySelectorAll('input[name="titles"]'))
                         .map(input => input.value.trim())
                         .filter(title => title !== '');
 
-    // すべての備考入力フィールドを取得
+    // すべての備考入力フィールドを取得し、空文字列を除外
     const notes = Array.from(document.querySelectorAll('input[name="notes"]'))
                         .map(input => input.value.trim())
                         .filter(note => note !== '');
