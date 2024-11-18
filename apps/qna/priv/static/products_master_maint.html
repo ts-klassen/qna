@@ -291,13 +291,6 @@
                 products.forEach(function(product) {
                     var tr = document.createElement('tr');
 
-                    // 製品IDの表示を削除
-                    /*
-                    var tdId = document.createElement('td');
-                    tdId.textContent = product.id;
-                    tr.appendChild(tdId);
-                    */
-
                     var tdName = document.createElement('td');
                     tdName.textContent = product.name;
                     tr.appendChild(tdName);
@@ -375,7 +368,12 @@
                         fetchProducts();
                         clearAddForm();
                     } else {
-                        alert('製品の追加に失敗しました。原因: ' + data.reason);
+                        if(data.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchProducts();
+                        } else {
+                            alert('製品の追加に失敗しました。原因: ' + data.reason);
+                        }
                     }
                 })
                 .catch(error => {
@@ -434,7 +432,12 @@
                                     fetchProducts();
                                     cancelEdit();
                                 } else {
-                                    alert('製品の更新に失敗しました。原因: ' + updateData.reason);
+                                    if(updateData.reason === 'conflict') {
+                                        alert('データに競合が発生しました。最新のデータを取得します。');
+                                        fetchProducts();
+                                    } else {
+                                        alert('製品の更新に失敗しました。原因: ' + updateData.reason);
+                                    }
                                 }
                             })
                             .catch(function(error) {
