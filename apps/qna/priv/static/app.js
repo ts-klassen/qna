@@ -1,7 +1,7 @@
 // ページロード時にsheat_idを一度生成して固定
 const sheat_id = generateUUID();
 
-// クラスを使用してフィールド管理を行う（オプション）
+// フィールド管理クラス
 class FieldManager {
     constructor(containerId, type) {
         this.container = document.getElementById(containerId);
@@ -43,10 +43,13 @@ class FieldManager {
     }
 
     clearFields() {
-        const inputs = this.container.querySelectorAll(`input[name="${this.type}"]`);
-        inputs.forEach(input => {
-            input.value = '';
-        });
+        // 見出し titles はクリアしない
+        if (this.type === 'notes') {
+            const notesInputs = this.container.querySelectorAll(`input[name="${this.type}"]`);
+            notesInputs.forEach(input => {
+                input.value = '';
+            });
+        }
     }
 }
 
@@ -105,12 +108,11 @@ document.getElementById('questionForm').addEventListener('submit', async functio
         if (result.success) {
             messageDiv.style.color = 'green';
             messageDiv.textContent = '質問が正常に登録されました。';
-            // 質問主文と備考、識別番号をクリア
-            document.getElementById('question').value = '';
+            // 識別番号、質問主文、備考のみをクリア
             noInput.value = '';
-            titlesManager.clearFields();
+            document.getElementById('question').value = '';
             notesManager.clearFields();
-            // 初回送信後に製品名とバージョンをdisabledにする
+            // 製品名とバージョンをdisabledにする
             if (!productNameInput.disabled && !productVersionInput.disabled) {
                 disableFixedFields(productNameInput, productVersionInput);
             }
@@ -135,7 +137,7 @@ function generateUUID() {
     });
 }
 
-// フィールド管理関数（クラスを使用して簡潔に管理）
+// フィールドを追加する関数
 function addField(type) {
     if (type === 'titles') {
         titlesManager.addField();
@@ -144,6 +146,7 @@ function addField(type) {
     }
 }
 
+// フィールドを削除する関数
 function removeField(button) {
     const fieldDiv = button.parentElement;
     const type = fieldDiv.parentElement.id === 'titlesContainer' ? 'titles' : 'notes';
