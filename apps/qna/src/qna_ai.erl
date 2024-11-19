@@ -5,6 +5,7 @@
       , ask/2
       , text_to_vector/1
       , text_to_vector/2
+      , fill_out/1
       , calc_cost_js/0
       , cost/1
     ]).
@@ -20,6 +21,47 @@
 -opaque obj() :: #{
         chat => chat_gpte:chat()
       , info => #{}
+    }.
+
+
+-spec fill_out(
+        #{
+            this := qna:qna()
+          , search_result := [qna:qna()]
+        }
+    ) -> #{log:=[#{
+            type := ai_answering
+          , time := klsn:binstr()
+          , q := klsn:binstr()
+          , a := klsn:binstr()
+        }]
+      , answer := klsn:binstr()
+      , answer_sup := [klsn:binstr()]
+      , state := qna:state()
+    }.
+fill_out(#{search_result := []}) ->
+    #{
+        log => [#{
+            type => ai_answering
+          , time => klsn_db:time_now()
+          , q => <<"類似する過去の回答がありません。"/utf8>>
+          , a => <<"回答できませんでした。"/utf8>>
+        }]
+      , answer => <<>>
+      , answer_sup => []
+      , state => ai_unanswerable
+    };
+fill_out(#{search_result := LastQna, this := Qna}) ->
+    #{
+        log => [#{
+            type => ai_answering
+          , time => klsn_db:time_now()
+          , q => <<"類似する過去の回答があります！"/utf8>>
+          , a => <<"未実装のため回答できませんでした。"/utf8>>
+        }]
+      , answer => <<>>
+      , answer_sup => []
+      , state => ai_unanswerable
     }.
 
 -spec new(new_opts()) -> obj().
@@ -53,6 +95,25 @@ ask(Text, #{chat := Chat0, info := Info}) ->
       , version => 1
     }),
     {Res, #{ chat => Chat10, info => Info}}.
+
+-spec log_chat_gpte(chat_gpte:chat()) -> ok.
+log_chat_gpte(Chat) ->
+    Usage = chat_gpte:get_last_usage(Chat),
+    Messages = lists:map(fun
+        ({Type, Value}) when is_binary(Value), is_atom(Type) ->
+            #{type => Type, value => Value};
+        (Other) ->
+            Value = iolist_to_binary(io_lib:format("~p", [Other])),
+            #{type => unknown, value => Value}
+    end, chat_gpte:messages(Chat)),
+    {_, _} = klsn_db:create_doc(?MODULE, #{
+        messages => Messages
+      , model => chat_gpte:model(Chat)
+      , usage => Usage
+      , type => chat
+      , version => 1
+    }),
+    ok.
 
 -spec text_to_vector(klsn:binstr()) -> embe_vector_db:vector().
 text_to_vector(Text) ->

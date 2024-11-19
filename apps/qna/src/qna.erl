@@ -6,6 +6,13 @@
       , user_upsert/2
       , embed/1
       , search/1
+      , ai_answer/1
+    ]).
+
+-export_type([
+        id/0
+      , state/0
+      , qna/0
     ]).
 
 % debug export
@@ -14,6 +21,16 @@
     ]).
 
 -type id() :: klsn:binstr().
+
+-type state() :: init
+               | embedded
+               | searched
+               | ai_answered
+               | ai_unanswerable
+               | human_answered
+               | human_checked
+               | error
+               .
 
 -type qna() :: #{
         embe_id => embe:id()
@@ -33,7 +50,7 @@
         }
       , answer => klsn:binstr()
       , answer_sup => [klsn:binstr()]
-      , state => init | embedded | searched | answered | error
+      , state => state()
       , last_exec => #{
             type => embed
           , at => klsn:binstr()
@@ -67,6 +84,12 @@
               , time => klsn:binstr()
               , search_result => [#{qna_id => id(), score => float()}]
             }
+          | #{
+                type => ai_answering
+              , time => klsn:binstr()
+              , q => klsn:binstr()
+              , a => klsn:binstr()
+            }
         ]
     }.
 
@@ -86,6 +109,8 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
         (<<"answer">>, Bin) when is_binary(Bin) -> true;
         (<<"answer_sup">>, List) when is_list(List) -> true;
         (<<"waiting_for">>, Map) when is_map(Map) -> true;
+        (<<"state">>, <<"human_answered">>) -> true;
+        (<<"state">>, <<"human_checked">>) -> true;
         (<<"_id">>, Bin) when is_binary(Bin) -> true;
         (<<"_rev">>, Bin) when is_binary(Bin) -> true;
         (_, _) -> false
@@ -250,6 +275,49 @@ search(QnaId) ->
               , time => klsn_db:time_now()
               , search_result => SearchResLog
             } | Logs]
+        })
+    end),
+    ok.
+
+-spec ai_answer(id()) -> ok.
+ai_answer(QnaId) ->
+    LastExec = #{ type => ai_answer, at => klsn_db:time_now() },
+    Qna = klsn_db:update(?MODULE, QnaId, fun(Doc) ->
+        Doc#{
+            <<"state">> => <<"error">>
+          , <<"last_exec">> => LastExec
+        }
+    end),
+    SearchRes = case Qna of
+        #{<<"last_search_result">>:=SearchResIds} ->
+            lists:filtermap(fun(SRI) ->
+                case lookup(SRI) of
+                    {value, Doc} -> {true, Doc};
+                    _ -> false
+                end
+            end, SearchResIds);
+        _ ->
+            []
+    end,
+    #{
+        log := Log
+      , answer := Answer
+      , answer_sup := AnswerSup
+      , state := State
+    } = qna_ai:fill_out(#{
+        search_result => SearchRes
+      , this => Qna
+    }),
+    klsn_db:update(?MODULE, QnaId, fun(Doc) ->
+        Logs = case Doc of
+            #{<<"logs">> := Logs0} -> Logs0;
+            _ -> []
+        end,
+        klsn_map:upsert([<<"waiting_for">>, <<"search">>], false, Doc#{
+            <<"state">> => State
+          , <<"answer">> => Answer
+          , <<"answer_sup">> => AnswerSup
+          , <<"logs">> => Log ++ Logs
         })
     end),
     ok.

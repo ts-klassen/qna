@@ -69,7 +69,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
         },
         "answer": "This is the answer.", // optional
         "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
-        "state": "answered", // ignored by backend
+        "state": "ai_answered", // "human_answered" or "human_checked"
         "last_exec": { // ignored by backend
           "type": "embed",
           "at": "2023-10-01T12:00:00.000+09:00"
@@ -130,7 +130,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             },
             "answer": "This is the answer.", // optional
             "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
-            "state": "answered",
+            "state": "ai_answered",
             "last_exec": {
               "type": "embed",
               "at": "2023-10-01T12:00:00.000+09:00"
@@ -210,7 +210,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             },
             "answer": "This is the answer.", // optional
             "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
-            "state": "answered",
+            "state": "ai_answered",
             "last_exec": {
               "type": "embed",
               "at": "2023-10-01T12:00:00.000+09:00"
