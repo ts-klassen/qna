@@ -101,7 +101,7 @@ normalize(Qna0) ->
 lookup(QnaId) ->
     klsn_db:lookup(?MODULE, QnaId).
 
--spec user_upsert(qna(), qna_user:user()) -> qna().
+-spec user_upsert(qna(), qna_user:user()) -> conflict | qna().
 user_upsert(Qna0, #{<<"user">>:=UserId}) ->
     Qna10 = normalize(Qna0),
     Qna20 = maps:filter(fun
@@ -140,29 +140,33 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
         (_Key, Val) ->
             Val
     end, Qna20),
-    #{<<"_id">>:=Id} = upsert(Qna30),
-    BaseLog = #{
-        time => klsn_db:time_now()
-      , user => UserId
+    case upsert(Qna30) of
+        #{<<"_id">>:=Id} ->
+            BaseLog = #{
+                time => klsn_db:time_now()
+                      , user => UserId
       , payload => Qna30
-    },
-    Log = case Qna10 of
-        #{<<"_id">>:=_, <<"_rev">>:=_} ->
-            BaseLog#{
-                type => update
-            };
-        _ ->
-            BaseLog#{
-                type => create
-            }
-    end,
-    klsn_db:update(?MODULE, Id, fun(Doc) ->
-        Logs = case Doc of
-            #{<<"logs">>:=Logs0} -> Logs0;
-            _ -> []
-        end,
-        Doc#{<<"logs">> => [Log|Logs]}
-    end).
+            },
+            Log = case Qna10 of
+                #{<<"_id">>:=_, <<"_rev">>:=_} ->
+                    BaseLog#{
+                        type => update
+                    };
+                _ ->
+                    BaseLog#{
+                        type => create
+                    }
+            end,
+            klsn_db:update(?MODULE, Id, fun(Doc) ->
+                Logs = case Doc of
+                    #{<<"logs">>:=Logs0} -> Logs0;
+                    _ -> []
+                end,
+                Doc#{<<"logs">> => [Log|Logs]}
+            end);
+        conflict ->
+            conflict
+    end.
 
 -spec upsert(qna()) -> conflict | qna().
 upsert(Qna0) ->
@@ -313,7 +317,7 @@ ai_answer(QnaId) ->
             #{<<"logs">> := Logs0} -> Logs0;
             _ -> []
         end,
-        klsn_map:upsert([<<"waiting_for">>, <<"search">>], false, Doc#{
+        klsn_map:upsert([<<"waiting_for">>, <<"ai_answer">>], false, Doc#{
             <<"state">> => State
           , <<"answer">> => Answer
           , <<"answer_sup">> => AnswerSup
