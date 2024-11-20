@@ -176,8 +176,18 @@
                     position: relative;
                     padding-left: 50%;
                 }
+                td::before {
+                    position: absolute;
+                    top: 0;
+                    left: 6px;
+                    width: 45%;
+                    padding-right: 10px;
+                    white-space: nowrap;
+                    font-weight: bold;
+                }
                 #titles-table td::before { content: "見出し"; }
                 #notes-table td::before { content: "質問補足"; }
+                #question-table td::before { content: "質問（主文）"; }
             }
         </style>
     </head>
@@ -208,10 +218,18 @@
                 <!-- 質問補足がここに追加されます -->
             </tbody>
         </table>
-        <div class="section-box">
-            <h3>質問（主文）</h3>
-            <span id="question"></span>
-        </div>
+        <table id="question-table">
+            <thead>
+                <tr>
+                    <th>質問（主文）</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="question"></td>
+                </tr>
+            </tbody>
+        </table>
     
         <h2>回答とその補足</h2>
         <div id="update-container">
@@ -577,8 +595,20 @@
                             });
                         }
     
-                        // 質問（主文）の表示
-                        document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
+                        // 質問（主文）をテーブルに追加
+                        const questionTableBody = document.querySelector('#question-table tbody');
+                        questionTableBody.innerHTML = ''; // 既存の質問（主文）をクリア
+                        const question = data.qna.embe_metadata.question || '';
+                        if (question === '') {
+                            const row = questionTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.colSpan = 1;
+                            cell.innerText = '質問（主文）がありません。';
+                        } else {
+                            const row = questionTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.innerText = question;
+                        }
     
                         // 回答が確認済みかどうかはあえてチェックしない
                     } else {
