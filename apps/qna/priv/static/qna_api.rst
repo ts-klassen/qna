@@ -70,6 +70,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
         "answer": "This is the answer.", // optional
         "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
         "state": "ai_answered", // "human_answered" or "human_checked"
+        "last_log_statement": "Entry created",
         "last_exec": { // ignored by backend
           "type": "embed",
           "at": "2023-10-01T12:00:00.000+09:00"
@@ -81,7 +82,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
         },
         "last_search_result": ["search_id_1", "search_id_2"], // ignored by backend
         "qna_version": 1, // ignored by backend
-        "log": [ // ignored by backend
+        "logs": [ // ignored by backend
           {
             "type": "create",
             "time": "2023-10-01T12:00:00Z",
@@ -131,6 +132,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             "answer": "This is the answer.", // optional
             "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
             "state": "ai_answered",
+            "last_log_statement": "Entry created",
             "last_exec": {
               "type": "embed",
               "at": "2023-10-01T12:00:00.000+09:00"
@@ -142,7 +144,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             },
             "last_search_result": ["search_id_1", "search_id_2"],
             "qna_version": 1,
-            "log": [
+            "logs": [
               {
                 "type": "create",
                 "time": "2023-10-01T12:00:00Z",
@@ -211,6 +213,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             "answer": "This is the answer.", // optional
             "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
             "state": "ai_answered",
+            "last_log_statement": "Entry created",
             "last_exec": {
               "type": "embed",
               "at": "2023-10-01T12:00:00.000+09:00"
@@ -222,7 +225,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             },
             "last_search_result": ["search_id_1", "search_id_2"],
             "qna_version": 1,
-            "log": [
+            "logs": [
               {
                 "type": "create",
                 "time": "2023-10-01T12:00:00Z",
@@ -319,6 +322,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             "answer": "This is the answer.", // optional
             "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
             "state": "init",
+            "last_log_statement": "Entry created",
             "last_exec": {
               "type": "embed",
               "at": "2023-10-01T12:00:00.000+09:00"
@@ -330,7 +334,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
             },
             "last_search_result": ["search_id_1", "search_id_2"],
             "qna_version": 1,
-            "log": [
+            "logs": [
               {
                 "type": "create",
                 "time": "2023-10-01T12:00:00Z",

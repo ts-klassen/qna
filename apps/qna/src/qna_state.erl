@@ -23,6 +23,9 @@ states() ->
       , <<"ai_unanswerable">>
       , <<"human_answered">>
       , <<"human_checked">>
+      , <<"dataset">>
+      , <<"excluded">>
+      , <<"deleted">>
       , <<"error">>
       , <<"other">>
     ].

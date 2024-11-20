@@ -22,6 +22,7 @@
 
 -type id() :: klsn:binstr().
 
+% when editing state, make sure to edit qna_state:states() too.
 -type state() :: init
                | embedded
                | searched
@@ -29,6 +30,9 @@
                | ai_unanswerable
                | human_answered
                | human_checked
+               | dataset
+               | excluded
+               | deleted
                | error
                .
 
@@ -51,6 +55,7 @@
       , answer => klsn:binstr()
       , answer_sup => [klsn:binstr()]
       , state => state()
+      , last_log_statement => klsn:binstr()
       , last_exec => #{
             type => embed
           , at => klsn:binstr()
@@ -62,7 +67,7 @@
         }
       , last_search_result => [id()]
       , qna_version => 1
-      , log => [
+      , logs => [
             #{
                 type => create
               , time => klsn:binstr()
@@ -111,6 +116,7 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
         (<<"waiting_for">>, Map) when is_map(Map) -> true;
         (<<"state">>, <<"human_answered">>) -> true;
         (<<"state">>, <<"human_checked">>) -> true;
+        (<<"last_log_statement">>, Bin) when is_binary(Bin) -> true;
         (<<"_id">>, Bin) when is_binary(Bin) -> true;
         (<<"_rev">>, Bin) when is_binary(Bin) -> true;
         (_, _) -> false
