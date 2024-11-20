@@ -186,8 +186,8 @@
                     font-weight: bold;
                 }
                 #titles-table td::before { content: "見出し"; }
-                #notes-table td::before { content: "質問補足"; }
                 #question-table td::before { content: "質問（主文）"; }
+                #notes-table td::before { content: "質問補足"; }
             }
         </style>
     </head>
@@ -208,16 +208,6 @@
                 <!-- 見出しがここに追加されます -->
             </tbody>
         </table>
-        <table id="notes-table">
-            <thead>
-                <tr>
-                    <th>質問補足</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 質問補足がここに追加されます -->
-            </tbody>
-        </table>
         <table id="question-table">
             <thead>
                 <tr>
@@ -228,6 +218,16 @@
                 <tr>
                     <td id="question"></td>
                 </tr>
+            </tbody>
+        </table>
+        <table id="notes-table">
+            <thead>
+                <tr>
+                    <th>質問補足</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 質問補足がここに追加されます -->
             </tbody>
         </table>
     
@@ -578,6 +578,21 @@
                             });
                         }
     
+                        // 質問（主文）をテーブルに追加
+                        const questionTableBody = document.querySelector('#question-table tbody');
+                        questionTableBody.innerHTML = ''; // 既存の質問（主文）をクリア
+                        const question = data.qna.embe_metadata.question || '';
+                        if (question === '') {
+                            const row = questionTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.colSpan = 1;
+                            cell.innerText = '質問（主文）がありません。';
+                        } else {
+                            const row = questionTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.innerText = question;
+                        }
+    
                         // 質問補足をテーブルに追加
                         const notesTableBody = document.querySelector('#notes-table tbody');
                         notesTableBody.innerHTML = ''; // 既存の質問補足をクリア
@@ -593,21 +608,6 @@
                                 const cell = row.insertCell();
                                 cell.innerText = note;
                             });
-                        }
-    
-                        // 質問（主文）をテーブルに追加
-                        const questionTableBody = document.querySelector('#question-table tbody');
-                        questionTableBody.innerHTML = ''; // 既存の質問（主文）をクリア
-                        const question = data.qna.embe_metadata.question || '';
-                        if (question === '') {
-                            const row = questionTableBody.insertRow();
-                            const cell = row.insertCell();
-                            cell.colSpan = 1;
-                            cell.innerText = '質問（主文）がありません。';
-                        } else {
-                            const row = questionTableBody.insertRow();
-                            const cell = row.insertCell();
-                            cell.innerText = question;
                         }
     
                         // 回答が確認済みかどうかはあえてチェックしない
