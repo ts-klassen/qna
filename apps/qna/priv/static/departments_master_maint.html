@@ -45,6 +45,9 @@
         .button:hover {
             background-color: #0056b3;
         }
+        .edit-button {
+            width: 6em; /* Set fixed width for Edit buttons */
+        }
         .form-group {
             margin-bottom: 10px;
         }
@@ -199,7 +202,7 @@
                     var tdActions = document.createElement('td');
                     var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
-                    editBtn.className = 'button';
+                    editBtn.className = 'button edit-button'; // 追加: edit-buttonクラスを適用
                     editBtn.addEventListener('click', () => openEditForm(department));
                     tdActions.appendChild(editBtn);
                     tr.appendChild(tdActions);
