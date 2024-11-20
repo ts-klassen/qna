@@ -58,16 +58,22 @@
                 <th>製品バージョン</th>
                 <th>シートID</th>
                 <th>番号</th>
-                <th>見出し</th>
+                <th>見出し1</th>
+                <th>見出し2</th>
+                <th>見出し3</th>
                 <th>質問</th>
-                <th>質問補足</th>
+                <th>質問補足1</th>
+                <th>質問補足2</th>
+                <th>質問補足3</th>
                 <th>回答</th>
-                <th>回答補足</th>
+                <th>回答補足1</th>
+                <th>回答補足2</th>
+                <th>回答補足3</th>
                 <th>ログページ</th>
             </tr>
         </thead>
         <tbody>
-            <!-- QNA IDと詳細およびログリンクがここに表示されます -->
+            <!-- QNAの詳細およびログリンクがここに表示されます -->
         </tbody>
     </table>
     
@@ -167,7 +173,7 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td colspan="10">この状態に該当するQNAはありません。</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="16">この状態に該当するQNAはありません。</td></tr>';
                             } else {
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
@@ -193,33 +199,39 @@
                                     noCell.innerHTML = escapeHTML(qna.embe_metadata.no || 'N/A');
                                     row.appendChild(noCell);
                                     
-                                    // 見出しセル
-                                    const titles = Array.isArray(qna.embe_metadata.titles) ? qna.embe_metadata.titles.join(', ') : 'N/A';
-                                    const titlesCell = document.createElement('td');
-                                    titlesCell.innerHTML = escapeHTML(titles);
-                                    row.appendChild(titlesCell);
+                                    // 見出しセル（最大3つ）
+                                    for (let i = 0; i < 3; i++) {
+                                        const title = Array.isArray(qna.embe_metadata.titles) && qna.embe_metadata.titles[i] ? qna.embe_metadata.titles[i] : '';
+                                        const titleCell = document.createElement('td');
+                                        titleCell.innerHTML = escapeHTML(title);
+                                        row.appendChild(titleCell);
+                                    }
                                     
                                     // 質問セル
                                     const questionCell = document.createElement('td');
                                     questionCell.innerHTML = escapeHTML(qna.embe_metadata.question || 'N/A');
                                     row.appendChild(questionCell);
                                     
-                                    // 質問補足セル
-                                    const notes = Array.isArray(qna.embe_metadata.notes) ? qna.embe_metadata.notes.join(', ') : 'N/A';
-                                    const notesCell = document.createElement('td');
-                                    notesCell.innerHTML = escapeHTML(notes);
-                                    row.appendChild(notesCell);
+                                    // 質問補足セル（最大3つ）
+                                    for (let i = 0; i < 3; i++) {
+                                        const note = Array.isArray(qna.embe_metadata.notes) && qna.embe_metadata.notes[i] ? qna.embe_metadata.notes[i] : '';
+                                        const noteCell = document.createElement('td');
+                                        noteCell.innerHTML = escapeHTML(note);
+                                        row.appendChild(noteCell);
+                                    }
                                     
                                     // 回答セル
                                     const answerCell = document.createElement('td');
                                     answerCell.innerHTML = escapeHTML(qna.answer || 'N/A');
                                     row.appendChild(answerCell);
                                     
-                                    // 回答補足セル
-                                    const answerSup = Array.isArray(qna.answer_sup) ? qna.answer_sup.join(', ') : 'N/A';
-                                    const answerSupCell = document.createElement('td');
-                                    answerSupCell.innerHTML = escapeHTML(answerSup);
-                                    row.appendChild(answerSupCell);
+                                    // 回答補足セル（最大3つ）
+                                    for (let i = 0; i < 3; i++) {
+                                        const answerSup = Array.isArray(qna.answer_sup) && qna.answer_sup[i] ? qna.answer_sup[i] : '';
+                                        const answerSupCell = document.createElement('td');
+                                        answerSupCell.innerHTML = escapeHTML(answerSup);
+                                        row.appendChild(answerSupCell);
+                                    }
                                     
                                     // ログページセル
                                     const logCell = document.createElement('td');
