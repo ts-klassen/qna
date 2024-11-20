@@ -55,6 +55,7 @@
       , answer => klsn:binstr()
       , answer_sup => [klsn:binstr()]
       , state => state()
+      , last_state => state()
       , last_log_statement => klsn:binstr()
       , last_exec => #{
             type => embed
@@ -213,17 +214,20 @@ upsert(Qna0) ->
 embed(QnaId) ->
     LastExec = #{ type => embed, at => klsn_db:time_now() },
     Qna = klsn_db:update(?MODULE, QnaId, fun(Qna0) ->
+        LastState = klsn_map:get([<<"state">>], Qna0, <<"init">>),
         case parse_metadata(maps:get(<<"embe_metadata">>, Qna0)) of
             none ->
                 Qna0#{
                     <<"state">> => <<"error">>
                   , <<"last_exec">> => LastExec
+                  , <<"last_state">> => LastState
                 };
             {value, NewMetaData} ->
                 Qna0#{
                     <<"embe_metadata">> => NewMetaData
                   , <<"state">> => <<"error">>
                   , <<"last_exec">> => LastExec
+                  , <<"last_state">> => LastState
                 }
         end
     end),
@@ -256,9 +260,11 @@ embed(QnaId) ->
 search(QnaId) ->
     LastExec = #{ type => search, at => klsn_db:time_now() },
     Qna = klsn_db:update(?MODULE, QnaId, fun(Doc) ->
+        LastState = klsn_map:get([<<"state">>], Doc, <<"embedded">>),
         Doc#{
             <<"state">> => <<"error">>
           , <<"last_exec">> => LastExec
+          , <<"last_state">> => LastState
         }
     end),
     EmbeId = maps:get(<<"embe_id">>, Qna),
@@ -293,9 +299,11 @@ search(QnaId) ->
 ai_answer(QnaId) ->
     LastExec = #{ type => ai_answer, at => klsn_db:time_now() },
     Qna = klsn_db:update(?MODULE, QnaId, fun(Doc) ->
+        LastState = klsn_map:get([<<"state">>], Doc, <<"searched">>),
         Doc#{
             <<"state">> => <<"error">>
           , <<"last_exec">> => LastExec
+          , <<"last_state">> => LastState
         }
     end),
     SearchRes = case Qna of
