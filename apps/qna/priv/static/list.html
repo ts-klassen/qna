@@ -54,8 +54,8 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>商品ID</th>
-                <th>商品バージョン</th>
+                <th>製品名</th>
+                <th>製品バージョン</th>
                 <th>番号</th>
                 <th>ログページ</th>
             </tr>
@@ -73,6 +73,8 @@
             const qnaTableBody = document.querySelector('#qnaTable tbody');
             const errorDiv = document.getElementById('error');
 
+            let productMap = {}; // 製品IDから製品名へのマッピング
+
             // HTMLインジェクションを防ぐためのエスケープ関数
             function escapeHTML(str) {
                 const div = document.createElement('div');
@@ -80,31 +82,65 @@
                 return div.innerHTML;
             }
 
-            // ページ読み込み時に状態の一覧を取得
-            fetch('/qna/api/v2/qna/state', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    data.state_list.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state;
-                        option.textContent = state;
-                        stateSelect.appendChild(option);
-                    });
-                } else {
-                    displayError(`状態の取得に失敗しました: ${data.reason}`);
-                }
-            })
-            .catch(error => {
-                console.error('状態の取得中にエラーが発生しました:', error);
-                displayError('状態の取得中にエラーが発生しました。');
-            });
+            // マスタデータ（製品情報）の取得
+            function fetchMasterData() {
+                return fetch('/qna/api/v2/master/products', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.payload.products.forEach(product => {
+                            productMap[product.id] = product.name;
+                        });
+                    } else {
+                        displayError(`製品マスタの取得に失敗しました: ${data.reason}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('製品マスタの取得中にエラーが発生しました:', error);
+                    displayError('製品マスタの取得中にエラーが発生しました。');
+                });
+            }
+
+            // 状態の一覧を取得
+            function fetchStates() {
+                return fetch('/qna/api/v2/qna/state', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.state_list.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state;
+                            option.textContent = state;
+                            stateSelect.appendChild(option);
+                        });
+                    } else {
+                        displayError(`状態の取得に失敗しました: ${data.reason}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('状態の取得中にエラーが発生しました:', error);
+                    displayError('状態の取得中にエラーが発生しました。');
+                });
+            }
+
+            // ページ読み込み時にマスタデータと状態一覧を取得
+            Promise.all([fetchMasterData(), fetchStates()])
+                .catch(error => {
+                    console.error('初期データの取得中にエラーが発生しました:', error);
+                    displayError('初期データの取得中にエラーが発生しました。');
+                });
 
             // 状態選択時の処理
             stateSelect.addEventListener('change', () => {
@@ -135,12 +171,13 @@
                                     idCell.innerHTML = escapeHTML(qna._id);
                                     row.appendChild(idCell);
                                     
-                                    // 商品IDセル
-                                    const productIdCell = document.createElement('td');
-                                    productIdCell.innerHTML = escapeHTML(qna.embe_metadata.product_id || 'N/A');
-                                    row.appendChild(productIdCell);
+                                    // 製品名セル
+                                    const productName = productMap[qna.embe_metadata.product_id] || '不明な製品';
+                                    const productNameCell = document.createElement('td');
+                                    productNameCell.innerHTML = escapeHTML(productName);
+                                    row.appendChild(productNameCell);
                                     
-                                    // 商品バージョンセル
+                                    // 製品バージョンセル
                                     const productVersionCell = document.createElement('td');
                                     productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || 'N/A');
                                     row.appendChild(productVersionCell);
