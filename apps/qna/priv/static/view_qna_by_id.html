@@ -144,6 +144,11 @@
             </div>
             <button type="button" id="add-sup-button">補足回答を追加</button>
 
+            <label>
+                <input type="checkbox" id="confirm-checkbox" name="confirm">
+                この内容で確認済みとする
+            </label>
+
             <button type="submit" class="submit-button">保存</button>
         </form>
     </div>
@@ -332,7 +337,7 @@
         }
 
         // QNAを更新
-        async function updateQna(qnaId, updatedAnswer, updatedAnswerSup) {
+        async function updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed) {
             try {
                 // まず、現在のQNAデータを取得
                 const qnaData = await fetchQna(qnaId);
@@ -345,7 +350,7 @@
                     ...currentQna, 
                     answer: updatedAnswer, 
                     answer_sup: updatedAnswerSup, 
-                    state: "human_answered" 
+                    state: isConfirmed ? "human_checked" : "human_answered" 
                 };
 
                 const response = await fetch('/qna/api/v2/qna/upsert', {
@@ -420,6 +425,10 @@
                             addSupAnswer(sup);
                         }
                     }
+
+                    // 回答が確認済みかどうかをチェック
+                    const confirmCheckbox = document.getElementById('confirm-checkbox');
+                    confirmCheckbox.checked = data.qna.state === "human_checked";
                 } else {
                     displayError(`ログの取得に失敗しました: ${data.reason}`);
                 }
@@ -458,12 +467,15 @@
                     }
                 });
 
+                // Get confirmation status
+                const isConfirmed = document.getElementById('confirm-checkbox').checked;
+
                 // Disable the submit button to prevent multiple submissions
                 submitButton.disabled = true;
                 submitButton.textContent = '保存中...';
 
                 try {
-                    await updateQna(qnaId, updatedAnswer, updatedAnswerSup);
+                    await updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed);
                 } finally {
                     // Re-enable the submit button after the operation completes
                     submitButton.disabled = false;
