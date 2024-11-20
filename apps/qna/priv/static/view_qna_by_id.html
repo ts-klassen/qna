@@ -144,465 +144,493 @@
                 background-color: #d6ecfe;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
-            /* Styles for section boxes */
-            .section-box {
-                border: 1px solid #ccc;
-                padding: 15px;
-                border-radius: 5px;
-                background-color: #f9f9f9;
+            /* Styles for tables */
+            table {
+                width: 100%;
+                border-collapse: collapse;
                 margin-bottom: 20px;
             }
-            /* Additional styles for multiple headings */
-            .heading-box {
+            th, td {
                 border: 1px solid #ddd;
-                padding: 10px;
-                border-radius: 4px;
-                background-color: #fff;
-                margin-bottom: 10px;
+                padding: 8px;
+                text-align: left;
             }
-    </style>
-</head>
-<body>
-    <h2>情報</h2>
-    <p>製品名: <span id="product_name"></span></p>
-    <p>製品バージョン: <span id="product_version"></span></p>
-    <p>項番: <span id="no"></span></p>
-
-    <h2>質問</h2>
-    <div id="titles-container">
-        <!-- 見出しがここに追加されます -->
-    </div>
-    <div class="section-box">
-        <h3>質問（主文）</h3>
-        <span id="question"></span>
-    </div>
-    <div class="section-box">
-        <h3>質問補足</h3>
-        <span id="notes"></span>
-    </div>
-
-    <h2>回答とその補足</h2>
-    <div id="update-container">
-        <form id="update-form">
-            <label for="answer">回答:</label>
-            <textarea id="answer" name="answer"></textarea>
-
-            <label>補足回答:</label>
-            <div id="sup-container">
-                <!-- 補足回答がここに追加されます -->
-            </div>
-            <button type="button" id="add-sup-button">補足回答を追加</button>
-
-            <center><label>
-                <input type="checkbox" id="confirm-checkbox" name="confirm">
-                この内容で確認済みとする
-            </label></center>
-
-            <button type="submit" class="submit-button">保存</button>
-        </form>
-    </div>
-
-    <h2>ログ</h2>
-    <div id="log-container">
-        <!-- ログがここに表示されます -->
-    </div>
-
-    <div id="message"></div>
-
-    <script>
-        // URIのハッシュからQNA IDを取得
-        function getQnaIdFromHash() {
-            return decodeURIComponent(window.location.hash.substring(1));
-        }
-
-        // HTMLエスケープ関数
-        function escapeHTML(str) {
-            return str.replace(/&/g, "&amp;")
-                      .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;")
-                      .replace(/"/g, "&quot;")
-                      .replace(/'/g, "&#039;");
-        }
-
-        // ログをフォーマットして表示
-        async function displayLogs(logs) {
-            const container = document.getElementById('log-container');
-            container.innerHTML = ''; // 既存のログをクリア
-            // 製品マスタ
-            var prodMst = await fetchProdMst();
-            var prodName = (prodId) => {
-                var prod = prodMst.payload.products.find((e)=>e.id==prodId);
-                return prod ? prod.name : 'Unknown Product';
-            };
-
-            for(var log of logs) {
-                const logEntry = document.createElement('div');
-                logEntry.classList.add('log-entry');
-                const content = document.createElement('div');
-                content.classList.add('log-content');
-
-                // ログの種類に応じてクラスを追加
-                if (log.type === 'create') {
-                    logEntry.classList.add('type-create');
-                    content.innerText = `作成\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}`;
-                }
-                else if (log.type === 'update') {
-                    logEntry.classList.add('type-update');
-                    var check = "";
-                    if (log.payload.embe_metadata &&
-                        log.payload.embe_metadata.available)
-                    {
-                        check = "\n\nこの内容で確認済みとする";
-                    }
-                    content.innerText = `更新\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}${check}`;
-                }
-                else if (log.type === 'embed') {
-                    logEntry.classList.add('type-embed');
-                    content.innerText = `埋め込みを実施`;
-                }
-                else if (log.type === 'search') {
-                    logEntry.classList.add('type-search');
-                    var res = [];
-                    for (var search of log.search_result) {
-                        var score = Math.round(10000 * search.score) / 10000;
-                        var qna0 = await fetchQna(search.qna_id);
-                        var csv = qna2csv(qna0.qna, prodName);
-                        var detailLink = `view_qna_by_id.html#${escapeHTML(search.qna_id)}`;
-                        var overview = `${score}: ${csv}`
-                        res.push({detailLink, overview});
-                    }
-                    res.forEach(item => {
-                        const box = document.createElement('div');
-                        box.classList.add('overview-box');
-                        box.innerText = item.overview;
-                        box.addEventListener('click', () => {
-                            window.open(item.detailLink, '_blank');
-                        });
-                        content.appendChild(box);
-                    });
-                }
-                else if (log.type === 'ai_answering') {
-                    logEntry.classList.add('type-ai-answering');
-                    content.innerText = `AI回答\n\n${log.q}:\n${log.a}`;
-                }
-
-                const header = document.createElement('div');
-                header.classList.add('log-header');
-                header.innerText = `${log.type} | ${log.time}`;
-
-                logEntry.appendChild(header);
-                logEntry.appendChild(content);
-                container.appendChild(logEntry);
+            th {
+                background-color: #f2f2f2;
             }
-        }
-        
-        // QNA 情報をCSV風テキストデータ に変換
-        function qna2csv(qna, prodName) {
-            var meta = qna.embe_metadata ? qna.embe_metadata : {};
-            var no = meta.no ? meta.no : "";
-            var product_id = meta.product_id ? meta.product_id : "";
-            var product_version = meta.product_version ? meta.product_version : "";
-            var titles = meta.titles ? meta.titles : [];
-            var question = meta.question ? meta.question : "";
-            var notes = meta.notes ? meta.notes : [];
-            var answer = qna.answer ? qna.answer : "";
-            var answer_sup = qna.answer_sup ? qna.answer_sup : [];
-
-            var arr = [];
-            arr.push(prodName(product_id));
-            arr.push(product_version);
-            arr.push(no);
-            for (var txt of titles) {
-                arr.push(txt);
+            /* Responsive table */
+            @media screen and (max-width: 600px) {
+                table, thead, tbody, th, td, tr {
+                    display: block;
+                }
+                th {
+                    position: absolute;
+                    top: -9999px;
+                    left: -9999px;
+                }
+                tr {
+                    margin-bottom: 1rem;
+                }
+                td {
+                    border: none;
+                    position: relative;
+                    padding-left: 50%;
+                }
+                td::before {
+                    position: absolute;
+                    top: 0;
+                    left: 6px;
+                    width: 45%;
+                    padding-right: 10px;
+                    white-space: nowrap;
+                    font-weight: bold;
+                }
+                td:nth-of-type(1)::before { content: "見出し"; }
             }
-            arr.push(question);
-            for (var txt of notes) {
-                arr.push(txt);
+        </style>
+    </head>
+    <body>
+        <h2>情報</h2>
+        <p>製品名: <span id="product_name"></span></p>
+        <p>製品バージョン: <span id="product_version"></span></p>
+        <p>項番: <span id="no"></span></p>
+    
+        <h2>質問</h2>
+        <table id="titles-table">
+            <thead>
+                <tr>
+                    <th>見出し</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 見出しがここに追加されます -->
+            </tbody>
+        </table>
+        <div class="section-box">
+            <h3>質問（主文）</h3>
+            <span id="question"></span>
+        </div>
+        <div class="section-box">
+            <h3>質問補足</h3>
+            <span id="notes"></span>
+        </div>
+    
+        <h2>回答とその補足</h2>
+        <div id="update-container">
+            <form id="update-form">
+                <label for="answer">回答:</label>
+                <textarea id="answer" name="answer"></textarea>
+    
+                <label>補足回答:</label>
+                <div id="sup-container">
+                    <!-- 補足回答がここに追加されます -->
+                </div>
+                <button type="button" id="add-sup-button">補足回答を追加</button>
+    
+                <center><label>
+                    <input type="checkbox" id="confirm-checkbox" name="confirm">
+                    この内容で確認済みとする
+                </label></center>
+    
+                <button type="submit" class="submit-button">保存</button>
+            </form>
+        </div>
+    
+        <h2>ログ</h2>
+        <div id="log-container">
+            <!-- ログがここに表示されます -->
+        </div>
+    
+        <div id="message"></div>
+    
+        <script>
+            // URIのハッシュからQNA IDを取得
+            function getQnaIdFromHash() {
+                return decodeURIComponent(window.location.hash.substring(1));
             }
-            arr.push(answer);
-            for (var txt of answer_sup) {
-                arr.push(txt);
+    
+            // HTMLエスケープ関数
+            function escapeHTML(str) {
+                return str.replace(/&/g, "&amp;")
+                          .replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;")
+                          .replace(/"/g, "&quot;")
+                          .replace(/'/g, "&#039;");
             }
-            return arr.join(",");
-        }
-
-        // エラーメッセージを表示
-        function displayError(message) {
-            const container = document.getElementById('log-container');
-            container.innerHTML = `<div style="color: red;">${escapeHTML(message)}</div>`;
-        }
-
-        // 成功メッセージを表示
-        function displaySuccess(message) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.className = 'success';
-            messageDiv.textContent = message;
-            setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
-            }, 3000);
-        }
-
-        // エラーメッセージを表示
-        function displayFormError(message) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.className = 'error';
-            messageDiv.textContent = message;
-            setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
-            }, 5000);
-        }
-
-        // 製品マスタを取得
-        async function fetchProdMst() {
-            try {
-                const response = await fetch('/qna/api/v2/master/products', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                return data;
-            } catch (error) {
-                displayError(`エラーが発生しました: ${error.message}`);
-            }
-        }
-
-        // QNAを取得
-        async function fetchQna(qnaId) {
-            try {
-                const response = await fetch('/qna/api/v2/qna/lookup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ id: qnaId }),
-                    credentials: 'same-origin'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                return data;
-            } catch (error) {
-                displayError(`エラーが発生しました: ${error.message}`);
-            }
-        }
-
-        // QNAを更新
-        async function updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed) {
-            try {
-                // まず、現在のQNAデータを取得
-                const qnaData = await fetchQna(qnaId);
-                if (!qnaData.success) {
-                    throw new Error(`QNAの取得に失敗しました: ${qnaData.reason}`);
-                }
-
-                const currentQna = qnaData.qna;
-                var updatedQna = { 
-                    ...currentQna, 
-                    answer: updatedAnswer, 
-                    answer_sup: updatedAnswerSup,  
-                };
-                
-                if (isConfirmed) {
-                    updatedQna.state = "human_checked";
-                    updatedQna.embe_metadata.available = true;
-                }
-                else {
-                    updatedQna.state = "human_answered";
-                    updatedQna.embe_metadata.available = false;
-                
-                }
-
-                const response = await fetch('/qna/api/v2/qna/upsert', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedQna),
-                    credentials: 'same-origin'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    displaySuccess('回答が正常に更新されました。');
-                    // 更新後のログを再取得
-                    updatePage(qnaId);
-                } else {
-                    throw new Error(`更新に失敗しました: ${data.reason}`);
-                }
-            } catch (error) {
-                displayFormError(`エラーが発生しました: ${error.message}`);
-            }
-        }
-
-        // 補足回答を追加
-        function addSupAnswer(value = '') {
-            const supContainer = document.getElementById('sup-container');
-            const supDiv = document.createElement('div');
-            supDiv.className = 'sup-container';
-
-            const textarea = document.createElement('textarea');
-            textarea.name = 'answer_sup';
-            textarea.value = value;
-            supDiv.appendChild(textarea);
-
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.textContent = '削除';
-            removeButton.addEventListener('click', () => {
-                supContainer.removeChild(supDiv);
-            });
-            supDiv.appendChild(removeButton);
-
-            supContainer.appendChild(supDiv);
-        }
-
-        // ログデータを取得してページを更新
-        async function updatePage(qnaId) {
-            try {
-                const data = await fetchQna(qnaId);
-                const prodMst = await fetchProdMst();
+    
+            // ログをフォーマットして表示
+            async function displayLogs(logs) {
+                const container = document.getElementById('log-container');
+                container.innerHTML = ''; // 既存のログをクリア
+                // 製品マスタ
+                var prodMst = await fetchProdMst();
                 var prodName = (prodId) => {
                     var prod = prodMst.payload.products.find((e)=>e.id==prodId);
                     return prod ? prod.name : 'Unknown Product';
                 };
-
-                if (data.success) {
-                    const logs = data.qna.logs;
-                    displayLogs(logs);
-                    // 回答欄に現在の回答を表示
-                    const answerTextarea = document.getElementById('answer');
-                    answerTextarea.value = data.qna.answer || '';
-
-                    // 補足回答を表示
-                    const supContainer = document.getElementById('sup-container');
-                    supContainer.innerHTML = ''; // 既存の補足回答をクリア
-                    const answerSup = data.qna.answer_sup || [];
-                    if (answerSup.length === 0) {
-                        addSupAnswer();
-                    } else {
-                        for (let sup of answerSup) {
-                            addSupAnswer(sup);
-                        }
+    
+                for(var log of logs) {
+                    const logEntry = document.createElement('div');
+                    logEntry.classList.add('log-entry');
+                    const content = document.createElement('div');
+                    content.classList.add('log-content');
+    
+                    // ログの種類に応じてクラスを追加
+                    if (log.type === 'create') {
+                        logEntry.classList.add('type-create');
+                        content.innerText = `作成\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}`;
                     }
-
-                    // 製品情報を表示
-                    document.getElementById('product_name').textContent = prodName(data.qna.embe_metadata.product_id) || 'Unknown Product';
-                    document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
-                    document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
-
-                    // Q&Aメタデータを表示
-                    // 見出しを個別のボックスに追加
-                    const titlesContainer = document.getElementById('titles-container');
-                    titlesContainer.innerHTML = ''; // 既存の見出しをクリア
-                    const titles = data.qna.embe_metadata.titles || [];
-                    if (titles.length === 0) {
-                        const emptyBox = document.createElement('div');
-                        emptyBox.className = 'heading-box';
-                        emptyBox.innerText = '見出しがありません。';
-                        titlesContainer.appendChild(emptyBox);
-                    } else {
-                        titles.forEach(title => {
+                    else if (log.type === 'update') {
+                        logEntry.classList.add('type-update');
+                        var check = "";
+                        if (log.payload.embe_metadata &&
+                            log.payload.embe_metadata.available)
+                        {
+                            check = "\n\nこの内容で確認済みとする";
+                        }
+                        content.innerText = `更新\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}${check}`;
+                    }
+                    else if (log.type === 'embed') {
+                        logEntry.classList.add('type-embed');
+                        content.innerText = `埋め込みを実施`;
+                    }
+                    else if (log.type === 'search') {
+                        logEntry.classList.add('type-search');
+                        var res = [];
+                        for (var search of log.search_result) {
+                            var score = Math.round(10000 * search.score) / 10000;
+                            var qna0 = await fetchQna(search.qna_id);
+                            var csv = qna2csv(qna0.qna, prodName);
+                            var detailLink = `view_qna_by_id.html#${escapeHTML(search.qna_id)}`;
+                            var overview = `${score}: ${csv}`
+                            res.push({detailLink, overview});
+                        }
+                        res.forEach(item => {
                             const box = document.createElement('div');
-                            box.className = 'heading-box';
-                            const heading = document.createElement('h3');
-                            heading.textContent = '見出し';
-                            const titleText = document.createElement('span');
-                            titleText.textContent = title;
-                            box.appendChild(heading);
-                            box.appendChild(titleText);
-                            titlesContainer.appendChild(box);
+                            box.classList.add('overview-box');
+                            box.innerText = item.overview;
+                            box.addEventListener('click', () => {
+                                window.open(item.detailLink, '_blank');
+                            });
+                            content.appendChild(box);
                         });
                     }
-
-                    // 質問（主文）の表示
-                    document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
-
-                    // 質問補足の表示
-                    document.getElementById('notes').textContent = data.qna.embe_metadata.notes.join(', ') || '';
-
-                    // 回答が確認済みかどうかはあえてチェックしない
-                } else {
-                    displayError(`ログの取得に失敗しました: ${data.reason}`);
+                    else if (log.type === 'ai_answering') {
+                        logEntry.classList.add('type-ai-answering');
+                        content.innerText = `AI回答\n\n${log.q}:\n${log.a}`;
+                    }
+    
+                    const header = document.createElement('div');
+                    header.classList.add('log-header');
+                    header.innerText = `${log.type} | ${log.time}`;
+    
+                    logEntry.appendChild(header);
+                    logEntry.appendChild(content);
+                    container.appendChild(logEntry);
                 }
-            } catch (error) {
-                displayError(`エラーが発生しました: ${error.message}`);
             }
-        }
-
-        // 初期化処理
-        function init() {
-            const qnaId = getQnaIdFromHash();
-            if (!qnaId) {
-                displayError('QNA IDが指定されていません。URIのハッシュ部分にQNA IDを追加してください。');
-                return;
+            
+            // QNA 情報をCSV風テキストデータ に変換
+            function qna2csv(qna, prodName) {
+                var meta = qna.embe_metadata ? qna.embe_metadata : {};
+                var no = meta.no ? meta.no : "";
+                var product_id = meta.product_id ? meta.product_id : "";
+                var product_version = meta.product_version ? meta.product_version : "";
+                var titles = meta.titles ? meta.titles : [];
+                var question = meta.question ? meta.question : "";
+                var notes = meta.notes ? meta.notes : [];
+                var answer = qna.answer ? qna.answer : "";
+                var answer_sup = qna.answer_sup ? qna.answer_sup : [];
+    
+                var arr = [];
+                arr.push(prodName(product_id));
+                arr.push(product_version);
+                arr.push(no);
+                for (var txt of titles) {
+                    arr.push(txt);
+                }
+                arr.push(question);
+                for (var txt of notes) {
+                    arr.push(txt);
+                }
+                arr.push(answer);
+                for (var txt of answer_sup) {
+                    arr.push(txt);
+                }
+                return arr.join(",");
             }
-            updatePage(qnaId);
-
-            const updateForm = document.getElementById('update-form');
-            const submitButton = updateForm.querySelector('.submit-button');
-
-            updateForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const updatedAnswer = document.getElementById('answer').value.trim();
-                if (updatedAnswer === "") {
-                    displayFormError('回答は空にできません。');
+    
+            // エラーメッセージを表示
+            function displayError(message) {
+                const container = document.getElementById('log-container');
+                container.innerHTML = `<div style="color: red;">${escapeHTML(message)}</div>`;
+            }
+    
+            // 成功メッセージを表示
+            function displaySuccess(message) {
+                const messageDiv = document.getElementById('message');
+                messageDiv.className = 'success';
+                messageDiv.textContent = message;
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 3000);
+            }
+    
+            // エラーメッセージを表示
+            function displayFormError(message) {
+                const messageDiv = document.getElementById('message');
+                messageDiv.className = 'error';
+                messageDiv.textContent = message;
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 5000);
+            }
+    
+            // 製品マスタを取得
+            async function fetchProdMst() {
+                try {
+                    const response = await fetch('/qna/api/v2/master/products', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+    
+                    const data = await response.json();
+    
+                    return data;
+                } catch (error) {
+                    displayError(`エラーが発生しました: ${error.message}`);
+                }
+            }
+    
+            // QNAを取得
+            async function fetchQna(qnaId) {
+                try {
+                    const response = await fetch('/qna/api/v2/qna/lookup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: qnaId }),
+                        credentials: 'same-origin'
+                    });
+    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+    
+                    const data = await response.json();
+    
+                    return data;
+                } catch (error) {
+                    displayError(`エラーが発生しました: ${error.message}`);
+                }
+            }
+    
+            // QNAを更新
+            async function updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed) {
+                try {
+                    // まず、現在のQNAデータを取得
+                    const qnaData = await fetchQna(qnaId);
+                    if (!qnaData.success) {
+                        throw new Error(`QNAの取得に失敗しました: ${qnaData.reason}`);
+                    }
+    
+                    const currentQna = qnaData.qna;
+                    var updatedQna = { 
+                        ...currentQna, 
+                        answer: updatedAnswer, 
+                        answer_sup: updatedAnswerSup,  
+                    };
+                    
+                    if (isConfirmed) {
+                        updatedQna.state = "human_checked";
+                        updatedQna.embe_metadata.available = true;
+                    }
+                    else {
+                        updatedQna.state = "human_answered";
+                        updatedQna.embe_metadata.available = false;
+                    
+                    }
+    
+                    const response = await fetch('/qna/api/v2/qna/upsert', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedQna),
+                        credentials: 'same-origin'
+                    });
+    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+    
+                    const data = await response.json();
+    
+                    if (data.success) {
+                        displaySuccess('回答が正常に更新されました。');
+                        // 更新後のログを再取得
+                        updatePage(qnaId);
+                    } else {
+                        throw new Error(`更新に失敗しました: ${data.reason}`);
+                    }
+                } catch (error) {
+                    displayFormError(`エラーが発生しました: ${error.message}`);
+                }
+            }
+    
+            // 補足回答を追加
+            function addSupAnswer(value = '') {
+                const supContainer = document.getElementById('sup-container');
+                const supDiv = document.createElement('div');
+                supDiv.className = 'sup-container';
+    
+                const textarea = document.createElement('textarea');
+                textarea.name = 'answer_sup';
+                textarea.value = value;
+                supDiv.appendChild(textarea);
+    
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.textContent = '削除';
+                removeButton.addEventListener('click', () => {
+                    supContainer.removeChild(supDiv);
+                });
+                supDiv.appendChild(removeButton);
+    
+                supContainer.appendChild(supDiv);
+            }
+    
+            // ログデータを取得してページを更新
+            async function updatePage(qnaId) {
+                try {
+                    const data = await fetchQna(qnaId);
+                    const prodMst = await fetchProdMst();
+                    var prodName = (prodId) => {
+                        var prod = prodMst.payload.products.find((e)=>e.id==prodId);
+                        return prod ? prod.name : 'Unknown Product';
+                    };
+    
+                    if (data.success) {
+                        const logs = data.qna.logs;
+                        displayLogs(logs);
+                        // 回答欄に現在の回答を表示
+                        const answerTextarea = document.getElementById('answer');
+                        answerTextarea.value = data.qna.answer || '';
+    
+                        // 補足回答を表示
+                        const supContainer = document.getElementById('sup-container');
+                        supContainer.innerHTML = ''; // 既存の補足回答をクリア
+                        const answerSup = data.qna.answer_sup || [];
+                        if (answerSup.length === 0) {
+                            addSupAnswer();
+                        } else {
+                            for (let sup of answerSup) {
+                                addSupAnswer(sup);
+                            }
+                        }
+    
+                        // 製品情報を表示
+                        document.getElementById('product_name').textContent = prodName(data.qna.embe_metadata.product_id) || 'Unknown Product';
+                        document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
+                        document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
+    
+                        // Q&Aメタデータを表示
+                        // 見出しをテーブルに追加
+                        const titlesTableBody = document.querySelector('#titles-table tbody');
+                        titlesTableBody.innerHTML = ''; // 既存の見出しをクリア
+                        const titles = data.qna.embe_metadata.titles || [];
+                        if (titles.length === 0) {
+                            const row = titlesTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.colSpan = 1;
+                            cell.innerText = '見出しがありません。';
+                        } else {
+                            titles.forEach(title => {
+                                const row = titlesTableBody.insertRow();
+                                const cell = row.insertCell();
+                                cell.innerText = title;
+                            });
+                        }
+    
+                        // 質問（主文）の表示
+                        document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
+    
+                        // 質問補足の表示
+                        document.getElementById('notes').textContent = data.qna.embe_metadata.notes.join(', ') || '';
+    
+                        // 回答が確認済みかどうかはあえてチェックしない
+                    } else {
+                        displayError(`ログの取得に失敗しました: ${data.reason}`);
+                    }
+                } catch (error) {
+                    displayError(`エラーが発生しました: ${error.message}`);
+                }
+            }
+    
+            // 初期化処理
+            function init() {
+                const qnaId = getQnaIdFromHash();
+                if (!qnaId) {
+                    displayError('QNA IDが指定されていません。URIのハッシュ部分にQNA IDを追加してください。');
                     return;
                 }
-
-                // Collect all supplementary answers
-                const supTextareas = document.querySelectorAll('textarea[name="answer_sup"]');
-                const updatedAnswerSup = [];
-                supTextareas.forEach(textarea => {
-                    const sup = textarea.value.trim();
-                    if (sup !== "") {
-                        updatedAnswerSup.push(sup);
+                updatePage(qnaId);
+    
+                const updateForm = document.getElementById('update-form');
+                const submitButton = updateForm.querySelector('.submit-button');
+    
+                updateForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const updatedAnswer = document.getElementById('answer').value.trim();
+                    if (updatedAnswer === "") {
+                        displayFormError('回答は空にできません。');
+                        return;
+                    }
+    
+                    // Collect all supplementary answers
+                    const supTextareas = document.querySelectorAll('textarea[name="answer_sup"]');
+                    const updatedAnswerSup = [];
+                    supTextareas.forEach(textarea => {
+                        const sup = textarea.value.trim();
+                        if (sup !== "") {
+                            updatedAnswerSup.push(sup);
+                        }
+                    });
+    
+                    // Get confirmation status
+                    const isConfirmed = document.getElementById('confirm-checkbox').checked;
+    
+                    // Disable the submit button to prevent multiple submissions
+                    submitButton.disabled = true;
+                    submitButton.textContent = '保存中...';
+    
+                    try {
+                        await updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed);
+                    } finally {
+                        // Re-enable the submit button after the operation completes
+                        submitButton.disabled = false;
+                        submitButton.textContent = '保存';
                     }
                 });
-
-                // Get confirmation status
-                const isConfirmed = document.getElementById('confirm-checkbox').checked;
-
-                // Disable the submit button to prevent multiple submissions
-                submitButton.disabled = true;
-                submitButton.textContent = '保存中...';
-
-                try {
-                    await updateQna(qnaId, updatedAnswer, updatedAnswerSup, isConfirmed);
-                } finally {
-                    // Re-enable the submit button after the operation completes
-                    submitButton.disabled = false;
-                    submitButton.textContent = '保存';
-                }
-            });
-
-            const addSupButton = document.getElementById('add-sup-button');
-            addSupButton.addEventListener('click', () => {
-                addSupAnswer();
-            });
-        }
-
-        // ページ読み込み時に初期化
-        window.onload = init;
-    </script>
-</body>
+    
+                const addSupButton = document.getElementById('add-sup-button');
+                addSupButton.addEventListener('click', () => {
+                    addSupAnswer();
+                });
+            }
+    
+            // ページ読み込み時に初期化
+            window.onload = init;
+        </script>
+    </body>
 </html>
