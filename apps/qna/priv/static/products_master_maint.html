@@ -13,6 +13,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            table-layout: fixed; /* Ensures that the table respects the defined widths */
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -21,6 +22,10 @@
             padding: 8px;
             text-align: left;
             vertical-align: top;
+            word-wrap: break-word; /* Prevents long content from overflowing */
+        }
+        .actions-column {
+            width: 8em; /* Adjusted width for Actions column */
         }
         .tag {
             display: inline-block;
@@ -44,6 +49,9 @@
         }
         .button:hover {
             background-color: #0056b3;
+        }
+        .edit-button {
+            width: 6em; /* Set fixed width for Edit buttons */
         }
         .form-group {
             margin-bottom: 10px;
@@ -154,7 +162,7 @@
                 <!-- 製品ID列を削除 -->
                 <th>製品名</th>
                 <th>バージョン</th>
-                <th>操作</th>
+                <th class="actions-column">操作</th> <!-- Added class for column width -->
             </tr>
         </thead>
         <tbody>
@@ -170,7 +178,7 @@
         // UUID生成関数
         var generateUUID = function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (c === 'y' ? (r & 0x3 | 0x8) : r);
                 return v.toString(16);
             });
         };
@@ -313,8 +321,9 @@
                     var tdActions = document.createElement('td');
                     var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
-                    editBtn.className = 'button';
+                    editBtn.className = 'button edit-button'; // Added: edit-buttonクラスを適用
                     editBtn.addEventListener('click', () => openEditForm(product));
+                    tdActions.className = 'actions-column'; // Added class for column width
                     tdActions.appendChild(editBtn);
                     tr.appendChild(tdActions);
 
@@ -490,8 +499,7 @@
 
             // 初期データの取得
             fetchProducts();
-        });
-    </script>
+        </script>
 
 </body>
 </html>
