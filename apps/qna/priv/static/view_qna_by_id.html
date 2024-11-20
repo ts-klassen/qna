@@ -144,6 +144,14 @@
                 background-color: #d6ecfe;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
+            /* New styles for section boxes */
+            .section-box {
+                border: 1px solid #ccc;
+                padding: 15px;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+                margin-bottom: 20px;
+            }
     </style>
 </head>
 <body>
@@ -153,12 +161,18 @@
     <p>項番: <span id="no"></span></p>
 
     <h2>質問</h2>
+    <div class="section-box">
         <h3>見出し</h3>
-            <span id="titles"></span>
+        <span id="titles"></span>
+    </div>
+    <div class="section-box">
         <h3>質問（主文）</h3>
-            <span id="question"></span>
+        <span id="question"></span>
+    </div>
+    <div class="section-box">
         <h3>質問補足</h3>
-            <span id="notes"></span>
+        <span id="notes"></span>
+    </div>
 
     <h2>回答とその補足</h2>
     <div id="update-container">
