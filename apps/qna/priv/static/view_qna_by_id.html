@@ -8,6 +8,41 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
+        #update-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            background-color: #f1f1f1;
+        }
+        #update-container h2 {
+            margin-top: 0;
+        }
+        #update-form {
+            display: flex;
+            flex-direction: column;
+        }
+        #update-form textarea {
+            resize: vertical;
+            min-height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        #update-form button {
+            width: 100px;
+            padding: 10px;
+            align-self: flex-end;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #update-form button:hover {
+            background-color: #45a049;
+        }
         #log-container {
             border: 1px solid #ccc;
             padding: 10px;
@@ -45,13 +80,36 @@
             white-space: pre-wrap;
             word-wrap: break-word;
         }
+        #message {
+            max-width: 800px;
+            margin: 10px auto;
+            text-align: center;
+            font-weight: bold;
+        }
+        #message.success {
+            color: green;
+        }
+        #message.error {
+            color: red;
+        }
     </style>
 </head>
 <body>
-    <h1>ログ閲覧ページ</h1>
+    <h2>更新</h2>
+    <div id="update-container">
+        <form id="update-form">
+            <label for="answer">回答を編集してください:</label>
+            <textarea id="answer" name="answer"></textarea>
+            <button type="submit">保存</button>
+        </form>
+    </div>
+
+    <h2>ログ</h2>
     <div id="log-container">
         <!-- ログがここに表示されます -->
     </div>
+
+    <div id="message"></div>
 
     <script>
         // URIのハッシュからQNA IDを取得
@@ -161,6 +219,28 @@
             container.innerHTML = `<div style="color: red;">${escapeHTML(message)}</div>`;
         }
 
+        // 成功メッセージを表示
+        function displaySuccess(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'success';
+            messageDiv.textContent = message;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 3000);
+        }
+
+        // エラーメッセージを表示
+        function displayFormError(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'error';
+            messageDiv.textContent = message;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+
         // 製品マスタを取得
         async function fetchProdMst() {
             try {
@@ -208,15 +288,56 @@
             }
         }
 
+        // QNAを更新
+        async function updateQna(qnaId, updatedAnswer) {
+            try {
+                // まず、現在のQNAデータを取得
+                const qnaData = await fetchQna(qnaId);
+                if (!qnaData.success) {
+                    throw new Error(`QNAの取得に失敗しました: ${qnaData.reason}`);
+                }
+
+                const currentQna = qnaData.qna;
+                const updatedQna = { ...currentQna, answer: updatedAnswer, state: "human_checked" };
+
+                const response = await fetch('/qna/api/v2/qna/upsert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedQna),
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displaySuccess('回答が正常に更新されました。');
+                    // 更新後のログを再取得
+                    fetchLogs(qnaId);
+                } else {
+                    throw new Error(`更新に失敗しました: ${data.reason}`);
+                }
+            } catch (error) {
+                displayFormError(`エラーが発生しました: ${error.message}`);
+            }
+        }
+
         // ログデータを取得
         async function fetchLogs(qnaId) {
             try {
-
                 const data = await fetchQna(qnaId);
 
                 if (data.success) {
-                    const logs = data.qna.logs;
+                    const logs = data.qna.log;
                     displayLogs(logs);
+                    // 回答欄に現在の回答を表示
+                    const answerTextarea = document.getElementById('answer');
+                    answerTextarea.value = data.qna.answer || '';
                 } else {
                     displayError(`ログの取得に失敗しました: ${data.reason}`);
                 }
@@ -233,6 +354,17 @@
                 return;
             }
             fetchLogs(qnaId);
+
+            const updateForm = document.getElementById('update-form');
+            updateForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const updatedAnswer = document.getElementById('answer').value.trim();
+                if (updatedAnswer === "") {
+                    displayFormError('回答は空にできません。');
+                    return;
+                }
+                updateQna(qnaId, updatedAnswer);
+            });
         }
 
         // ページ読み込み時に初期化
