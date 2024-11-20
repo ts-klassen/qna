@@ -76,6 +76,10 @@
         #update-form button.submit-button:hover {
             background-color: #45a049;
         }
+        #update-form button.submit-button:disabled {
+            background-color: #9E9E9E;
+            cursor: not-allowed;
+        }
         #log-container {
             border: 1px solid #ccc;
             padding: 10px;
@@ -434,7 +438,9 @@
             fetchLogs(qnaId);
 
             const updateForm = document.getElementById('update-form');
-            updateForm.addEventListener('submit', function(event) {
+            const submitButton = updateForm.querySelector('.submit-button');
+
+            updateForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const updatedAnswer = document.getElementById('answer').value.trim();
                 if (updatedAnswer === "") {
@@ -452,7 +458,17 @@
                     }
                 });
 
-                updateQna(qnaId, updatedAnswer, updatedAnswerSup);
+                // Disable the submit button to prevent multiple submissions
+                submitButton.disabled = true;
+                submitButton.textContent = '保存中...';
+
+                try {
+                    await updateQna(qnaId, updatedAnswer, updatedAnswerSup);
+                } finally {
+                    // Re-enable the submit button after the operation completes
+                    submitButton.disabled = false;
+                    submitButton.textContent = '保存';
+                }
             });
 
             const addSupButton = document.getElementById('add-sup-button');
