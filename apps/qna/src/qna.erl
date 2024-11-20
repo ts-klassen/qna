@@ -22,6 +22,7 @@
 
 -type id() :: klsn:binstr().
 
+% when editing state, make sure to edit qna_state:states() too.
 -type state() :: init
                | embedded
                | searched
@@ -29,6 +30,9 @@
                | ai_unanswerable
                | human_answered
                | human_checked
+               | dataset
+               | excluded
+               | deleted
                | error
                .
 
