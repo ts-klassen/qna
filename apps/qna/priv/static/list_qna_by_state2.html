@@ -199,17 +199,17 @@
 
                                     // 製品バージョンセル
                                     const productVersionCell = document.createElement('td');
-                                    productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || '');
+                                    productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || 'N/A');
                                     row.appendChild(productVersionCell);
 
                                     // シートIDセル
                                     const sheetIdCell = document.createElement('td');
-                                    sheetIdCell.innerHTML = escapeHTML(qna.embe_metadata.sheet_id || '');
+                                    sheetIdCell.innerHTML = escapeHTML(qna.embe_metadata.sheet_id || 'N/A');
                                     row.appendChild(sheetIdCell);
 
                                     // 番号セル
                                     const noCell = document.createElement('td');
-                                    noCell.innerHTML = escapeHTML(qna.embe_metadata.no || '');
+                                    noCell.innerHTML = escapeHTML(qna.embe_metadata.no || 'N/A');
                                     row.appendChild(noCell);
 
                                     // 見出しセル（動的）
@@ -235,7 +235,7 @@
 
                                     // 質問セル
                                     const questionCell = document.createElement('td');
-                                    questionCell.innerHTML = escapeHTML(qna.embe_metadata.question || '');
+                                    questionCell.innerHTML = escapeHTML(qna.embe_metadata.question || 'N/A');
                                     row.appendChild(questionCell);
 
                                     // 質問補足セル（動的）
@@ -261,7 +261,7 @@
 
                                     // 回答セル
                                     const answerCell = document.createElement('td');
-                                    answerCell.innerHTML = escapeHTML(qna.answer || '');
+                                    answerCell.innerHTML = escapeHTML(qna.answer || 'N/A');
                                     row.appendChild(answerCell);
 
                                     // 回答補足セル（動的）

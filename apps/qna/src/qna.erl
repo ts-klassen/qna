@@ -39,7 +39,7 @@
           , deleted => boolean()
           , product_id => klsn:binstr()
           , product_version => klsn:binstr()
-          , sheat_id => klsn:binstr()
+          , sheet_id => klsn:binstr()
           , no => klsn:binstr()
           , ordered_id => non_neg_integer()
           , input => klsn:binstr()
@@ -122,7 +122,7 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
                 (<<"deleted">>, Bool) when is_boolean(Bool) -> true;
                 (<<"product_id">>, Bin) when is_binary(Bin) -> true;
                 (<<"product_version">>, Bin) when is_binary(Bin) -> true;
-                (<<"sheat_id">>, Bin) when is_binary(Bin) -> true;
+                (<<"sheet_id">>, Bin) when is_binary(Bin) -> true;
                 (<<"no">>, Bin) when is_binary(Bin) -> true;
                 (<<"ordered_id">>, Int) when is_integer(Int), Int >= 0 -> true;
                 (<<"titles">>, List) when is_list(List) -> true;
