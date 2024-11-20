@@ -148,7 +148,7 @@
 </head>
 <body>
     <h2>情報</h2>
-    <p>製品ID: <span id="product_id"></span></p>
+    <p>製品名: <span id="product_name"></span></p>
     <p>製品バージョン: <span id="product_version"></span></p>
     <p>項番: <span id="no"></span></p>
 
@@ -451,6 +451,11 @@
         async function updatePage(qnaId) {
             try {
                 const data = await fetchQna(qnaId);
+                const prodMst = await fetchProdMst();
+                var prodName = (prodId) => {
+                    var prod = prodMst.payload.products.find((e)=>e.id==prodId);
+                    return prod ? prod.name : 'Unknown Product';
+                };
 
                 if (data.success) {
                     const logs = data.qna.logs;
@@ -472,7 +477,7 @@
                     }
 
                     // 製品情報を表示
-                    document.getElementById('product_id').textContent = data.qna.embe_metadata.product_id || '';
+                    document.getElementById('product_name').textContent = prodName(data.qna.embe_metadata.product_id) || 'Unknown Product';
                     document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
                     document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
 
