@@ -199,23 +199,16 @@
     </div>
 
     <script>
-        // フラグを追加して一度だけアラートを表示
-        let hasShownError = false;
 
         // エラーハンドリング関数
         function handleError(response) {
             if (response.status === 403) {
-                if (!hasShownError) {
-                    alert('権限が不足しています。管理者権限が必要です。');
-                    hasShownError = true;
-                    // 必要に応じてページをリダイレクトするなどの処理を追加できます。
-                }
+                alert('権限が不足しています。管理者権限が必要です。');
+                window.location.href = 'index.html';
+                alert('トップページにリダイレクトします。');
                 return null;
             } else if (!response.ok) {
-                if (!hasShownError) {
-                    alert('予期せぬエラーが発生しました。');
-                    hasShownError = true;
-                }
+                alert('予期せぬエラーが発生しました。');
                 return null;
             }
             return response.json();
