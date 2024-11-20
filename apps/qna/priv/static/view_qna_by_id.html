@@ -176,16 +176,8 @@
                     position: relative;
                     padding-left: 50%;
                 }
-                td::before {
-                    position: absolute;
-                    top: 0;
-                    left: 6px;
-                    width: 45%;
-                    padding-right: 10px;
-                    white-space: nowrap;
-                    font-weight: bold;
-                }
-                td:nth-of-type(1)::before { content: "見出し"; }
+                #titles-table td::before { content: "見出し"; }
+                #notes-table td::before { content: "質問補足"; }
             }
         </style>
     </head>
@@ -206,13 +198,19 @@
                 <!-- 見出しがここに追加されます -->
             </tbody>
         </table>
+        <table id="notes-table">
+            <thead>
+                <tr>
+                    <th>質問補足</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 質問補足がここに追加されます -->
+            </tbody>
+        </table>
         <div class="section-box">
             <h3>質問（主文）</h3>
             <span id="question"></span>
-        </div>
-        <div class="section-box">
-            <h3>質問補足</h3>
-            <span id="notes"></span>
         </div>
     
         <h2>回答とその補足</h2>
@@ -562,11 +560,25 @@
                             });
                         }
     
+                        // 質問補足をテーブルに追加
+                        const notesTableBody = document.querySelector('#notes-table tbody');
+                        notesTableBody.innerHTML = ''; // 既存の質問補足をクリア
+                        const notes = data.qna.embe_metadata.notes || [];
+                        if (notes.length === 0) {
+                            const row = notesTableBody.insertRow();
+                            const cell = row.insertCell();
+                            cell.colSpan = 1;
+                            cell.innerText = '質問補足がありません。';
+                        } else {
+                            notes.forEach(note => {
+                                const row = notesTableBody.insertRow();
+                                const cell = row.insertCell();
+                                cell.innerText = note;
+                            });
+                        }
+    
                         // 質問（主文）の表示
                         document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
-    
-                        // 質問補足の表示
-                        document.getElementById('notes').textContent = data.qna.embe_metadata.notes.join(', ') || '';
     
                         // 回答が確認済みかどうかはあえてチェックしない
                     } else {
