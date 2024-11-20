@@ -54,11 +54,14 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>商品ID</th>
+                <th>商品バージョン</th>
+                <th>番号</th>
                 <th>ログページ</th>
             </tr>
         </thead>
         <tbody>
-            <!-- QNA IDとログリンクがここに表示されます -->
+            <!-- QNA IDと詳細およびログリンクがここに表示されます -->
         </tbody>
     </table>
     
@@ -122,7 +125,7 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td colspan="2">この状態に該当するQNAはありません。</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="5">この状態に該当するQNAはありません。</td></tr>';
                             } else {
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
@@ -131,6 +134,21 @@
                                     const idCell = document.createElement('td');
                                     idCell.innerHTML = escapeHTML(qna._id);
                                     row.appendChild(idCell);
+                                    
+                                    // 商品IDセル
+                                    const productIdCell = document.createElement('td');
+                                    productIdCell.innerHTML = escapeHTML(qna.embe_metadata.product_id || 'N/A');
+                                    row.appendChild(productIdCell);
+                                    
+                                    // 商品バージョンセル
+                                    const productVersionCell = document.createElement('td');
+                                    productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || 'N/A');
+                                    row.appendChild(productVersionCell);
+                                    
+                                    // 番号セル
+                                    const noCell = document.createElement('td');
+                                    noCell.innerHTML = escapeHTML(qna.embe_metadata.no || 'N/A');
+                                    row.appendChild(noCell);
                                     
                                     // ログページセル
                                     const logCell = document.createElement('td');
