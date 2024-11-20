@@ -210,7 +210,7 @@
                 // ログの種類に応じてクラスを追加
                 if (log.type === 'create') {
                     logEntry.classList.add('type-create');
-                    content.innerText = `作成\n\nユーザー: ${log.user}\nペイロード: ${qna2csv(log.payload, prodName)}`;
+                    content.innerText = `作成\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}`;
                 }
                 else if (log.type === 'update') {
                     logEntry.classList.add('type-update');
