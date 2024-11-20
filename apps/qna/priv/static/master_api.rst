@@ -183,7 +183,95 @@ QNA Master HTTP API は、マスタデータの取得とメンテナンスをす
                       "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
                       "name": "human resources"
                   },
-                  // ここに既存の製品も含めてください
+                  // ここに既存の部署も含めてください
+              ]
+          },
+          "rev": "1-c5b685b2af9c5f7a2026bbd579026bce" // get したときの値。無ければ省略。
+        }
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        {
+          "success": true
+        }
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "conflict" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+### シート項目マスタ
+
+#### シート項目マスタの取得
+
+- **エンドポイント:** `/qna/api/v2/master/sheet_items`
+- **メソッド:** `GET`
+- **説明:**  
+シート項目マスタを取得します。
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        {
+          "success": true,
+          "payload": {
+              "sheet_items": [
+                  {
+                      "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
+                      "name": "sheet name",
+                      "is_hidden": false
+                  }
+              ]
+          },
+          "rev": "1-c5b685b2af9c5f7a2026bbd579026bce" // 無い場合もあります。
+        }
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "conflict" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+
+#### シート項目マスタの更新
+
+- **エンドポイント:** `/qna/api/v2/master/sheet_items`
+- **メソッド:** `POST`
+- **説明:**  
+シート項目マスタを上書きします。
+  部分更新ではなく、 payload で全体更新します。**既存の製品も含めてPOSTしてください。**
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **リクエストボディ:**
+  
+  .. code-block:: json
+
+        {
+          "payload": {
+              "sheet_items": [
+                  {
+                      "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
+                      "name": "sheet name",
+                      "is_hidden": false
+                  },
+                  // ここに既存のシート項目も含めてください
               ]
           },
           "rev": "1-c5b685b2af9c5f7a2026bbd579026bce" // get したときの値。無ければ省略。
