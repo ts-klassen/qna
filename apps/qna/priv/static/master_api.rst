@@ -118,6 +118,95 @@ QNA Master HTTP API は、マスタデータの取得とメンテナンスをす
               "reason": "conflict" // 他のエラー理由として "server_error", "clause_error" があります。
             }
 
+
+
+### 部署マスタ
+
+#### 部署マスタの取得
+
+- **エンドポイント:** `/qna/api/v2/master/departments`
+- **メソッド:** `GET`
+- **説明:**  
+部署マスタを取得します。
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        {
+          "success": true,
+          "payload": {
+              "departments": [
+                  {
+                      "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
+                      "name": "human resources"
+                  }
+              ]
+          },
+          "rev": "1-c5b685b2af9c5f7a2026bbd579026bce" // 無い場合もあります。
+        }
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "conflict" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+
+#### 部署マスタの更新
+
+- **エンドポイント:** `/qna/api/v2/master/departments`
+- **メソッド:** `POST`
+- **説明:**  
+部署マスタを上書きします。
+  部分更新ではなく、 payload で全体更新します。**既存の製品も含めてPOSTしてください。**
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **リクエストボディ:**
+  
+  .. code-block:: json
+
+        {
+          "payload": {
+              "departments": [
+                  {
+                      "id": "1b51743f-9a19-4af8-90ba-3d5dac71ffe8",
+                      "name": "human resources"
+                  },
+                  // ここに既存の製品も含めてください
+              ]
+          },
+          "rev": "1-c5b685b2af9c5f7a2026bbd579026bce" // get したときの値。無ければ省略。
+        }
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        {
+          "success": true
+        }
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "conflict" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+
 ### 注意事項
 
 フロントエンドでは、以下の点に注意してデータを扱ってください。
@@ -130,4 +219,7 @@ QNA Master HTTP API は、マスタデータの取得とメンテナンスをす
 
 - **データの上書き**
   - 更新APIは、部分更新ではなく全体更新です。必ず payload 全文を POST してください。既存の製品も含めて送信してください。
+
+- **コンフリクト対策**
+  - 表示する際に取得した rev を、更新時に渡してください。表示してから更新するまでの間に変更があった場合は、 conflict エラーを出します。更新後は、 rev を再取得してください。
 
