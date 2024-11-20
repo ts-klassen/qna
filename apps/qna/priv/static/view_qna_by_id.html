@@ -24,7 +24,7 @@
         }
         #update-form textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 4em;
             padding: 10px;
             margin-bottom: 10px;
             font-family: Arial, sans-serif;
@@ -34,7 +34,8 @@
             margin-bottom: 10px;
         }
         #update-form .sup-container textarea {
-            min-height: 60px;
+            min-height: 4em;
+            width: 80%;
         }
         #update-form .sup-container button {
             margin-top: 5px;
@@ -144,10 +145,10 @@
             </div>
             <button type="button" id="add-sup-button">補足回答を追加</button>
 
-            <label>
+            <center><label>
                 <input type="checkbox" id="confirm-checkbox" name="confirm">
                 この内容で確認済みとする
-            </label>
+            </label></center>
 
             <button type="submit" class="submit-button">保存</button>
         </form>
@@ -199,7 +200,13 @@
                 }
                 else if (log.type === 'update') {
                     logEntry.classList.add('type-update');
-                    content.innerText = `更新\n\nユーザー: ${log.user}\nペイロード: ${qna2csv(log.payload, prodName)}`;
+                    var check = "";
+                    if (log.payload.embe_metadata &&
+                        log.payload.embe_metadata.available)
+                    {
+                        check = "\n\nこの内容で確認済みとする";
+                    }
+                    content.innerText = `更新\n\nユーザー: ${log.user}\n内容: ${qna2csv(log.payload, prodName)}${check}`;
                 }
                 else if (log.type === 'embed') {
                     logEntry.classList.add('type-embed');
@@ -346,12 +353,21 @@
                 }
 
                 const currentQna = qnaData.qna;
-                const updatedQna = { 
+                var updatedQna = { 
                     ...currentQna, 
                     answer: updatedAnswer, 
-                    answer_sup: updatedAnswerSup, 
-                    state: isConfirmed ? "human_checked" : "human_answered" 
+                    answer_sup: updatedAnswerSup,  
                 };
+                
+                if (isConfirmed) {
+                    updatedQna.state = "human_checked";
+                    updatedQna.embe_metadata.available = true;
+                }
+                else {
+                    updatedQna.state = "human_answered";
+                    updatedQna.embe_metadata.available = false;
+                
+                }
 
                 const response = await fetch('/qna/api/v2/qna/upsert', {
                     method: 'POST',
@@ -371,7 +387,7 @@
                 if (data.success) {
                     displaySuccess('回答が正常に更新されました。');
                     // 更新後のログを再取得
-                    fetchLogs(qnaId);
+                    updatePage(qnaId);
                 } else {
                     throw new Error(`更新に失敗しました: ${data.reason}`);
                 }
@@ -402,8 +418,8 @@
             supContainer.appendChild(supDiv);
         }
 
-        // ログデータを取得
-        async function fetchLogs(qnaId) {
+        // ログデータを取得してページを更新
+        async function updatePage(qnaId) {
             try {
                 const data = await fetchQna(qnaId);
 
@@ -426,9 +442,7 @@
                         }
                     }
 
-                    // 回答が確認済みかどうかをチェック
-                    const confirmCheckbox = document.getElementById('confirm-checkbox');
-                    confirmCheckbox.checked = data.qna.state === "human_checked";
+                    // 回答が確認済みかどうかはあえてチェックしない
                 } else {
                     displayError(`ログの取得に失敗しました: ${data.reason}`);
                 }
@@ -444,7 +458,7 @@
                 displayError('QNA IDが指定されていません。URIのハッシュ部分にQNA IDを追加してください。');
                 return;
             }
-            fetchLogs(qnaId);
+            updatePage(qnaId);
 
             const updateForm = document.getElementById('update-form');
             const submitButton = updateForm.querySelector('.submit-button');
