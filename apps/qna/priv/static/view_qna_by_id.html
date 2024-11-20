@@ -219,9 +219,11 @@
                         var score = Math.round(10000 * search.score) / 10000;
                         var qna0 = await fetchQna(search.qna_id);
                         var csv = qna2csv(qna0.qna, prodName);
-                        res.push(`${score}: ${csv}`);
+                        var detailLink = `view_qna_by_id.html#${escapeHTML(search.qna_id)}`;
+                        var overview = `${score}: ${csv}`
+                        res.push({detailLink, overview});
                     }
-                    content.innerText = `検索を実施\n\n${res.join("\n")}`;
+                    // 指示: content.appendChild() を使って、 overview を表示する箱を作り、クリックしたら別タブで detailLink を開くようにして。
                 }
                 else if (log.type === 'ai_answering') {
                     logEntry.classList.add('type-ai-answering');
@@ -251,19 +253,19 @@
             var answer_sup = qna.answer_sup ? qna.answer_sup : [];
 
             var arr = [];
-            arr.push(escapeHTML(prodName(product_id)));
-            arr.push(escapeHTML(product_version));
-            arr.push(escapeHTML(no));
+            arr.push(prodName(product_id));
+            arr.push(product_version);
+            arr.push(no);
             for (var txt of titles) {
-                arr.push(escapeHTML(txt));
+                arr.push(txt);
             }
-            arr.push(escapeHTML(question));
+            arr.push(question);
             for (var txt of notes) {
-                arr.push(escapeHTML(txt));
+                arr.push(txt);
             }
-            arr.push(escapeHTML(answer));
+            arr.push(answer);
             for (var txt of answer_sup) {
-                arr.push(escapeHTML(txt));
+                arr.push(txt);
             }
             return arr.join(",");
         }
