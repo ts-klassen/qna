@@ -153,6 +153,9 @@
     <p>項番: <span id="no"></span></p>
 
     <h2>質問</h2>
+    <p>見出し: <span id="titles"></span></p>
+    <p>質問（主文）: <span id="question"></span></p>
+    <p>質問補足: <span id="notes"></span></p>
 
     <h2>回答とその補足</h2>
     <div id="update-container">
@@ -482,6 +485,11 @@
                     document.getElementById('product_name').textContent = prodName(data.qna.embe_metadata.product_id) || 'Unknown Product';
                     document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
                     document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
+
+                    // Q&Aメタデータを表示
+                    document.getElementById('titles').textContent = data.qna.embe_metadata.titles.join(', ') || '';
+                    document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
+                    document.getElementById('notes').textContent = data.qna.embe_metadata.notes.join(', ') || '';
 
                     // 回答が確認済みかどうかはあえてチェックしない
                 } else {
