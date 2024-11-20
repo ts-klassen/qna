@@ -472,8 +472,8 @@
                     }
 
                     // 製品情報を表示
-                    document.getElementById('product_id').textContent = data.qna.product_id || '';
-                    document.getElementById('product_version').textContent = data.qna.product_version || '';
+                    document.getElementById('product_id').textContent = data.qna.embe_metadata.product_id || '';
+                    document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
                     document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
 
                     // 回答が確認済みかどうかはあえてチェックしない
