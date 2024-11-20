@@ -9,10 +9,15 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
+        .sortable-container {
+            margin-bottom: 40px;
+        }
+        h2 {
+            margin-bottom: 10px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
             table-layout: fixed; /* Ensures that the table respects the defined widths */
         }
         table, th, td {
@@ -130,20 +135,41 @@
         </div>
     </div>
 
-    <!-- シート項目一覧テーブル -->
-    <table id="sheetItemsTable">
-        <thead>
-            <tr>
-                <th class="drag-handle">⇕</th>
-                <th>シート項目名</th>
-                <th>非表示</th>
-                <th class="actions-column">操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- データはここに挿入されます -->
-        </tbody>
-    </table>
+    <!-- 表示リスト -->
+    <div class="sortable-container">
+        <h2>表示項目</h2>
+        <table id="displayedSheetItemsTable">
+            <thead>
+                <tr>
+                    <th class="drag-handle">⇕</th>
+                    <th>シート項目名</th>
+                    <th>非表示</th>
+                    <th class="actions-column">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- データはここに挿入されます -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 非表示リスト -->
+    <div class="sortable-container">
+        <h2>非表示項目</h2>
+        <table id="hiddenSheetItemsTable">
+            <thead>
+                <tr>
+                    <th class="drag-handle">⇕</th>
+                    <th>シート項目名</th>
+                    <th>非表示</th>
+                    <th class="actions-column">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- データはここに挿入されます -->
+            </tbody>
+        </table>
+    </div>
 
     <script>
         const BASE_URI = '/qna/api/v2';
@@ -187,7 +213,8 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            var sheetItemsTableBody = document.querySelector('#sheetItemsTable tbody');
+            var displayedTableBody = document.querySelector('#displayedSheetItemsTable tbody');
+            var hiddenTableBody = document.querySelector('#hiddenSheetItemsTable tbody');
             var submitAddSheetItemBtn = document.getElementById('submitAddSheetItemBtn');
 
             var editSheetItemForm = document.getElementById('editSheetItemForm');
@@ -221,7 +248,8 @@
 
             // テーブルにシート項目を表示
             var renderSheetItems = function(sheetItems) {
-                sheetItemsTableBody.innerHTML = '';
+                displayedTableBody.innerHTML = '';
+                hiddenTableBody.innerHTML = '';
                 sheetItems.forEach(function(sheetItem) {
                     var tr = document.createElement('tr');
 
@@ -248,33 +276,69 @@
                     tdActions.appendChild(editBtn);
                     tr.appendChild(tdActions);
 
-                    sheetItemsTableBody.appendChild(tr);
+                    if(sheetItem.is_hidden) {
+                        hiddenTableBody.appendChild(tr);
+                    } else {
+                        displayedTableBody.appendChild(tr);
+                    }
                 });
             };
 
             // Initialize SortableJS
             var initializeSortable = function() {
-                new Sortable(sheetItemsTableBody, {
+                // Destroy existing Sortable instances if any to prevent duplicates
+                if(window.displayedSortable) window.displayedSortable.destroy();
+                if(window.hiddenSortable) window.hiddenSortable.destroy();
+
+                window.displayedSortable = new Sortable(displayedTableBody, {
+                    group: 'sheet-items',
                     handle: '.drag-handle',
                     animation: 150,
-                    onEnd: function (evt) {
-                        // 更新後の順序を取得
-                        var newOrder = [];
-                        sheetItemsTableBody.querySelectorAll('tr').forEach(function(row) {
-                            var id = row.querySelector('td:nth-child(2)').textContent.trim();
-                            var sheetItem = sheetItems.find(item => item.name === id);
-                            if(sheetItem) {
-                                newOrder.push(sheetItem);
-                            }
-                        });
+                    onEnd: handleSortEnd
+                });
 
-                        // シート項目の並び順を更新
-                        sheetItems = newOrder;
+                window.hiddenSortable = new Sortable(hiddenTableBody, {
+                    group: 'sheet-items',
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: handleSortEnd
+                });
+            };
 
-                        // バックエンドに変更を反映
-                        updateSheetItems();
+            // ハンドル関数
+            var handleSortEnd = function(evt) {
+                // 再度全ての行を取得してsheetItemsを更新
+                var updatedSheetItems = [];
+
+                // 表示リストから取得
+                displayedTableBody.querySelectorAll('tr').forEach(function(row) {
+                    var id = getRowId(row);
+                    var sheetItem = sheetItems.find(item => item.name === id);
+                    if(sheetItem) {
+                        sheetItem.is_hidden = false;
+                        updatedSheetItems.push(sheetItem);
                     }
                 });
+
+                // 非表示リストから取得
+                hiddenTableBody.querySelectorAll('tr').forEach(function(row) {
+                    var id = getRowId(row);
+                    var sheetItem = sheetItems.find(item => item.name === id);
+                    if(sheetItem) {
+                        sheetItem.is_hidden = true;
+                        updatedSheetItems.push(sheetItem);
+                    }
+                });
+
+                sheetItems = updatedSheetItems;
+
+                // バックエンドに変更を反映
+                updateSheetItems();
+            };
+
+            // 行からIDを取得する関数
+            var getRowId = function(row) {
+                return row.querySelector('td:nth-child(2)').textContent.trim();
             };
 
             // 新規シート項目の追加
