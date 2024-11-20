@@ -53,22 +53,13 @@
     
     <table id="qnaTable">
         <thead>
-            <tr>
+            <tr id="tableHeader">
                 <th>製品名</th>
                 <th>製品バージョン</th>
                 <th>シートID</th>
                 <th>番号</th>
-                <th>見出し1</th>
-                <th>見出し2</th>
-                <th>見出し3</th>
                 <th>質問</th>
-                <th>質問補足1</th>
-                <th>質問補足2</th>
-                <th>質問補足3</th>
                 <th>回答</th>
-                <th>回答補足1</th>
-                <th>回答補足2</th>
-                <th>回答補足3</th>
                 <th>ログページ</th>
             </tr>
         </thead>
@@ -83,6 +74,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const stateSelect = document.getElementById('stateSelect');
             const qnaTableBody = document.querySelector('#qnaTable tbody');
+            const tableHeader = document.getElementById('tableHeader');
             const errorDiv = document.getElementById('error');
 
             let productMap = {}; // 製品IDから製品名へのマッピング
@@ -173,66 +165,126 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td colspan="16">この状態に該当するQNAはありません。</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="7">この状態に該当するQNAはありません。</td></tr>';
                             } else {
+                                // Determine the maximum number of dynamic fields
+                                let maxTitles = 0;
+                                let maxQuestionNotes = 0;
+                                let maxAnswerNotes = 0;
+
+                                data.qna_list.forEach(qna => {
+                                    if (Array.isArray(qna.embe_metadata.titles)) {
+                                        maxTitles = Math.max(maxTitles, qna.embe_metadata.titles.length);
+                                    }
+                                    if (Array.isArray(qna.embe_metadata.notes)) {
+                                        maxQuestionNotes = Math.max(maxQuestionNotes, qna.embe_metadata.notes.length);
+                                    }
+                                    if (Array.isArray(qna.answer_sup)) {
+                                        maxAnswerNotes = Math.max(maxAnswerNotes, qna.answer_sup.length);
+                                    }
+                                });
+
+                                // Clear and rebuild the table header
+                                buildTableHeader(maxTitles, maxQuestionNotes, maxAnswerNotes);
+
+                                // Render each QNA entry
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
-                                    
+
                                     // 製品名セル
                                     const productName = productMap[qna.embe_metadata.product_id] || '不明な製品';
                                     const productNameCell = document.createElement('td');
                                     productNameCell.innerHTML = escapeHTML(productName);
                                     row.appendChild(productNameCell);
-                                    
+
                                     // 製品バージョンセル
                                     const productVersionCell = document.createElement('td');
                                     productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || 'N/A');
                                     row.appendChild(productVersionCell);
-                                    
+
                                     // シートIDセル
                                     const sheetIdCell = document.createElement('td');
                                     sheetIdCell.innerHTML = escapeHTML(qna.embe_metadata.sheet_id || 'N/A');
                                     row.appendChild(sheetIdCell);
-                                    
+
                                     // 番号セル
                                     const noCell = document.createElement('td');
                                     noCell.innerHTML = escapeHTML(qna.embe_metadata.no || 'N/A');
                                     row.appendChild(noCell);
-                                    
-                                    // 見出しセル（最大3つ）
-                                    for (let i = 0; i < 3; i++) {
-                                        const title = Array.isArray(qna.embe_metadata.titles) && qna.embe_metadata.titles[i] ? qna.embe_metadata.titles[i] : '';
-                                        const titleCell = document.createElement('td');
-                                        titleCell.innerHTML = escapeHTML(title);
-                                        row.appendChild(titleCell);
+
+                                    // 見出しセル（動的）
+                                    if (Array.isArray(qna.embe_metadata.titles)) {
+                                        qna.embe_metadata.titles.forEach(title => {
+                                            const titleCell = document.createElement('td');
+                                            titleCell.innerHTML = escapeHTML(title);
+                                            row.appendChild(titleCell);
+                                        });
+                                        // Fill empty cells if necessary
+                                        for (let i = qna.embe_metadata.titles.length; i < maxTitles; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
+                                    } else {
+                                        for (let i = 0; i < maxTitles; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
                                     }
-                                    
+
                                     // 質問セル
                                     const questionCell = document.createElement('td');
                                     questionCell.innerHTML = escapeHTML(qna.embe_metadata.question || 'N/A');
                                     row.appendChild(questionCell);
-                                    
-                                    // 質問補足セル（最大3つ）
-                                    for (let i = 0; i < 3; i++) {
-                                        const note = Array.isArray(qna.embe_metadata.notes) && qna.embe_metadata.notes[i] ? qna.embe_metadata.notes[i] : '';
-                                        const noteCell = document.createElement('td');
-                                        noteCell.innerHTML = escapeHTML(note);
-                                        row.appendChild(noteCell);
+
+                                    // 質問補足セル（動的）
+                                    if (Array.isArray(qna.embe_metadata.notes)) {
+                                        qna.embe_metadata.notes.forEach(note => {
+                                            const noteCell = document.createElement('td');
+                                            noteCell.innerHTML = escapeHTML(note);
+                                            row.appendChild(noteCell);
+                                        });
+                                        // Fill empty cells if necessary
+                                        for (let i = qna.embe_metadata.notes.length; i < maxQuestionNotes; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
+                                    } else {
+                                        for (let i = 0; i < maxQuestionNotes; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
                                     }
-                                    
+
                                     // 回答セル
                                     const answerCell = document.createElement('td');
                                     answerCell.innerHTML = escapeHTML(qna.answer || 'N/A');
                                     row.appendChild(answerCell);
-                                    
-                                    // 回答補足セル（最大3つ）
-                                    for (let i = 0; i < 3; i++) {
-                                        const answerSup = Array.isArray(qna.answer_sup) && qna.answer_sup[i] ? qna.answer_sup[i] : '';
-                                        const answerSupCell = document.createElement('td');
-                                        answerSupCell.innerHTML = escapeHTML(answerSup);
-                                        row.appendChild(answerSupCell);
+
+                                    // 回答補足セル（動的）
+                                    if (Array.isArray(qna.answer_sup)) {
+                                        qna.answer_sup.forEach(answerSup => {
+                                            const answerSupCell = document.createElement('td');
+                                            answerSupCell.innerHTML = escapeHTML(answerSup);
+                                            row.appendChild(answerSupCell);
+                                        });
+                                        // Fill empty cells if necessary
+                                        for (let i = qna.answer_sup.length; i < maxAnswerNotes; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
+                                    } else {
+                                        for (let i = 0; i < maxAnswerNotes; i++) {
+                                            const emptyCell = document.createElement('td');
+                                            emptyCell.innerHTML = '';
+                                            row.appendChild(emptyCell);
+                                        }
                                     }
-                                    
+
                                     // ログページセル
                                     const logCell = document.createElement('td');
                                     const logLink = document.createElement('a');
@@ -241,7 +293,7 @@
                                     logLink.target = '_blank'; // 新しいタブで開く
                                     logCell.appendChild(logLink);
                                     row.appendChild(logCell);
-                                    
+
                                     qnaTableBody.appendChild(row);
                                 });
                             }
@@ -260,7 +312,64 @@
             function displayError(message) {
                 errorDiv.textContent = message;
             }
-        });
-    </script>
-</body>
+
+            // テーブルのヘッダーを再構築する関数
+            function buildTableHeader(maxTitles, maxQuestionNotes, maxAnswerNotes) {
+                // Clear existing header except the first four fixed columns
+                while (tableHeader.firstChild) {
+                    tableHeader.removeChild(tableHeader.firstChild);
+                }
+
+                // Fixed columns
+                const fixedHeaders = [
+                    '製品名',
+                    '製品バージョン',
+                    'シートID',
+                    '番号'
+                ];
+
+                fixedHeaders.forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    tableHeader.appendChild(th);
+                });
+
+                // 動的な見出し列
+                for (let i = 1; i <= maxTitles; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = `見出し${i}`;
+                    tableHeader.appendChild(th);
+                }
+
+                // 質問列
+                const questionTh = document.createElement('th');
+                questionTh.textContent = '質問';
+                tableHeader.appendChild(questionTh);
+
+                // 動的な質問補足列
+                for (let i = 1; i <= maxQuestionNotes; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = `質問補足${i}`;
+                    tableHeader.appendChild(th);
+                }
+
+                // 回答列
+                const answerTh = document.createElement('th');
+                answerTh.textContent = '回答';
+                tableHeader.appendChild(answerTh);
+
+                // 動的な回答補足列
+                for (let i = 1; i <= maxAnswerNotes; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = `回答補足${i}`;
+                    tableHeader.appendChild(th);
+                }
+
+                // ログページ列
+                const logTh = document.createElement('th');
+                logTh.textContent = 'ログページ';
+                tableHeader.appendChild(logTh);
+            }
+        </script>
+    </body>
 </html>
