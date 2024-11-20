@@ -33,6 +33,13 @@
             color: red;
             margin-top: 20px;
         }
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -47,10 +54,11 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Log Page</th>
             </tr>
         </thead>
         <tbody>
-            <!-- QNA IDs will be populated here -->
+            <!-- QNA IDs and Log Links will be populated here -->
         </tbody>
     </table>
     
@@ -114,13 +122,25 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td>No QNA found for this state.</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="2">No QNA found for this state.</td></tr>';
                             } else {
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
-                                    const cell = document.createElement('td');
-                                    cell.innerHTML = escapeHTML(qna._id);
-                                    row.appendChild(cell);
+                                    
+                                    // ID Cell
+                                    const idCell = document.createElement('td');
+                                    idCell.innerHTML = escapeHTML(qna._id);
+                                    row.appendChild(idCell);
+                                    
+                                    // Log Page Cell
+                                    const logCell = document.createElement('td');
+                                    const logLink = document.createElement('a');
+                                    logLink.href = `view_qna_log.html#${encodeURIComponent(qna._id)}`;
+                                    logLink.textContent = 'View Log';
+                                    logLink.target = '_blank'; // Open in a new tab
+                                    logCell.appendChild(logLink);
+                                    row.appendChild(logCell);
+                                    
                                     qnaTableBody.appendChild(row);
                                 });
                             }
