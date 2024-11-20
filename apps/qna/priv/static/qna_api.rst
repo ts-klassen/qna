@@ -58,7 +58,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
           "deleted": false,
           "product_id": "ProductX",
           "product_version": "1.0.0", // string
-          "sheat_id": "sheat_123",
+          "sheet_id": "sheet_123",
           "no": "001",
           "ordered_id": 1001, // integer
           "input": "Generated text_to_vector input", // ignored by backend
@@ -119,7 +119,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "deleted": false,
               "product_id": "ProductX",
               "product_version": "1.0.0",
-              "sheat_id": "sheat_123",
+              "sheet_id": "sheet_123",
               "no": "001",
               "ordered_id": 1001,
               "input": "Generated text_to_vector input",
@@ -199,7 +199,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "deleted": false,
               "product_id": "ProductX",
               "product_version": "1.0.0",
-              "sheat_id": "sheat_123",
+              "sheet_id": "sheet_123",
               "no": "001",
               "ordered_id": 1001,
               "input": "Generated text_to_vector input",
@@ -307,7 +307,7 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "deleted": false,
               "product_id": "ProductX",
               "product_version": "1.0.0",
-              "sheat_id": "sheat_123",
+              "sheet_id": "sheet_123",
               "no": "001",
               "ordered_id": 1001,
               "input": "Generated text_to_vector input",

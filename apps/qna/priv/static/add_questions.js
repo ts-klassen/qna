@@ -1,5 +1,5 @@
-// ページロード時にsheat_idを一度生成して固定
-let sheat_id = generateUUID();
+// ページロード時にsheet_idを一度生成して固定
+let sheet_id = generateUUID();
 
 // 使用済みの識別番号を保持する配列
 const usedNos = [];
@@ -166,7 +166,7 @@ document.getElementById('questionForm').addEventListener('submit', async functio
         embe_metadata: {
             product_id: productIdInput.value.trim(),
             product_version: productVersionInput.value.trim(),
-            sheat_id: sheat_id,
+            sheet_id: sheet_id,
             no: no,
             titles: titles,
             question: question,
