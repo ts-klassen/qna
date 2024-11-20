@@ -68,5 +68,15 @@ db_setup() ->
           , <<"language">> => <<"javascript">>
         }
     end),
+    klsn_db:upsert(qna, {raw, <<"_design/qna_state">>}, fun(MaybeDoc) ->
+        Doc = case MaybeDoc of
+            {value, Doc0} -> Doc0;
+            none -> #{}
+        end,
+        Doc#{
+            <<"views">> => qna_state:couchdb_views()
+          , <<"language">> => <<"javascript">>
+        }
+    end),
     ok.
 

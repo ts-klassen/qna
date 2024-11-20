@@ -241,6 +241,114 @@ QNA User HTTP API は、一般ユーザー向けにQNAデータを操作する�
               "reason": "not_found" // 他のエラー理由として "server_error", "clause_error" があります。
             }
 
+
+#### QNAの state 取得（state）
+
+- **エンドポイント:** `/qna/api/v2/qna/state`
+- **メソッド:** `GET`
+- **説明:**  
+  QNA state の一覧を取得します。
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        { "success": true, state_list: ["init", "..."]}
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "server_error" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+
+#### QNAの一覧取得取得（list）
+
+- **エンドポイント:** `/qna/api/v2/qna/list`
+- **メソッド:** `POST`
+- **説明:**  
+  指定されたQNA state ( `state` フィールド ) に該当するQNA一覧を取得します。
+
+- **リクエストヘッダー:**
+  
+  - `Content-Type: application/json`
+
+- **リクエストボディ:**
+  
+  .. code-block:: json
+
+      {
+        "state": "init"
+      }
+
+- **レスポンス:**
+  
+  - **ステータスコード:** `200 OK`
+  - **ボディ（成功時）:**
+    .. code-block:: json
+
+        {
+          "success": true,
+          "qna_list": [{
+            "_id": "unique_qna_id",
+            "_rev": "unique_qna_revision",
+            "C": "2023-10-01T12:00:00.000+09:00" // created time
+            "U": "2023-10-01T12:00:00.000+09:00" // updated time
+            "embe_id": "unique_embe_id",
+            "embe_metadata": {
+              "available": true,
+              "deleted": false,
+              "product_id": "ProductX",
+              "product_version": "1.0.0",
+              "sheat_id": "sheat_123",
+              "no": "001",
+              "ordered_id": 1001,
+              "input": "Generated text_to_vector input",
+              "titles": ["Title1", "Title2"],
+              "question": "What is the purpose of API?",
+              "notes": ["Note1", "Note2"],
+              "qna_id": "qna_456"
+            },
+            "answer": "This is the answer.", // optional
+            "answer_sup": ["Supplementary answer 1", "Supplementary answer 2"], // optional
+            "state": "init",
+            "last_exec": {
+              "type": "embed",
+              "at": "2023-10-01T12:00:00.000+09:00"
+            },
+            "waiting_for": {
+              "embed": false,
+              "search": true,
+              "ai_answer": false
+            },
+            "last_search_result": ["search_id_1", "search_id_2"],
+            "qna_version": 1,
+            "log": [
+              {
+                "type": "create",
+                "time": "2023-10-01T12:00:00Z",
+                "user": "user123",
+                "payload": {}
+              }
+            ]
+          }]
+        }
+
+      - **ボディ（失敗時）:**
+        .. code-block:: json
+
+            {
+              "success": false,
+              "reason": "not_found" // 他のエラー理由として "server_error", "clause_error" があります。
+            }
+
 ### データバリデーションとセキュリティ
 
 フロントエンドでは、以下の点に注意してデータを扱ってください。

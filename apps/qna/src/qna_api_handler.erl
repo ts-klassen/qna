@@ -48,6 +48,14 @@ main(<<"POST">>, #{arg1 := <<"qna">>, arg2 := <<"lookup">>}, _, #{<<"id">>:=Id})
     end;
 
 
+main(<<"GET">>, #{arg1 := <<"qna">>, arg2 := <<"state">>}, _, _) ->
+    #{success => true, state_list => qna_state:states()};
+
+
+main(<<"POST">>, #{arg1 := <<"qna">>, arg2 := <<"list">>}, _, #{<<"state">>:=State}) ->
+    #{success => true, qna_list => qna_state:list(State)};
+
+
 main(<<"GET">>, #{arg1 := <<"master">>, arg2 := Id}, _, _) ->
     Master = qna_master:get(Id),
     Master#{ success => true };
