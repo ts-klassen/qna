@@ -70,6 +70,11 @@ main(<<"POST">>, #{arg1 := <<"master">>, arg2 := Id}, User, Payload) ->
     end;
 
 
+main(<<"POST">>, #{arg1 := <<"users">>, arg2 := <<"passwd">>}, #{<<"user">>:=User}, #{<<"passwd">>:=Passwd}) ->
+    qna_user:update_pw(User, Passwd, User),
+    #{success => true};
+
+
 
 main(_, _, _, _) ->
     #{ success => false, reason => clause_error }.

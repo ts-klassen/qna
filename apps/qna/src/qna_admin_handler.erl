@@ -26,7 +26,6 @@ init(Req0, State) ->
     Req = cowboy_req:reply(403, #{
         <<"content-type">> => <<"text/html; charset=utf-8">>
     }, <<"<h1>403 Forbidden</h1>\n">>, Req0),
-    io:format("~p~n", [Req]),
     {ok, Req, State}.
 
 

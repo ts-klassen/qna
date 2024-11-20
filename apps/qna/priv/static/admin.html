@@ -199,19 +199,28 @@
     </div>
 
     <script>
+
+        // エラーハンドリング関数
+        function handleError(response) {
+            if (response.status === 403) {
+                alert('権限が不足しています。管理者権限が必要です。');
+                window.location.href = 'index.html';
+                alert('トップページにリダイレクトします。');
+                return null;
+            } else if (!response.ok) {
+                alert('予期せぬエラーが発生しました。');
+                return null;
+            }
+            return response.json();
+        }
+
         // ユーザー一覧の取得と表示
         function fetchUsers() {
             fetch('/qna/api/v1/users', {
                 method: 'GET',
                 credentials: 'same-origin'
             })
-            .then(response => {
-                if (response.status === 200) {
-                    return response.json();
-                } else {
-                    alert('ユーザー情報の取得に失敗しました。');
-                }
-            })
+            .then(response => handleError(response))
             .then(data => {
                 if (data && data.success && Array.isArray(data.users)) {
                     const tbody = document.querySelector('#users-table tbody');
@@ -277,9 +286,9 @@
                     is_admin: isAdmin
                 })
             })
-            .then(response => response.json())
+            .then(response => handleError(response))
             .then(data => {
-                if (data.success) {
+                if (data && data.success) {
                     // クレデンシャルを表示
                     document.getElementById('credential-user-id').textContent = userId;
                     document.getElementById('credential-password').textContent = data.passwd;
@@ -287,7 +296,7 @@
                     
                     fetchUsers();
                     document.getElementById('add-user-form').reset();
-                } else {
+                } else if (data) {
                     alert('ユーザーの追加に失敗しました。');
                 }
             })
@@ -344,12 +353,12 @@
                     passwd: newPassword
                 })
             })
-            .then(response => response.json())
+            .then(response => handleError(response))
             .then(data => {
-                if (data.success) {
+                if (data && data.success) {
                     alert('パスワードが更新されました。');
                     closeModal();
-                } else {
+                } else if (data) {
                     alert('パスワードの更新に失敗しました。');
                 }
             })
@@ -364,13 +373,7 @@
                 method: 'GET',
                 credentials: 'same-origin'
             })
-            .then(response => {
-                if (response.status === 200) {
-                    return response.json();
-                } else {
-                    alert('IPアドレス情報の取得に失敗しました。');
-                }
-            })
+            .then(response => handleError(response))
             .then(data => {
                 if (data && data.success && Array.isArray(data.ip_list)) {
                     const tbody = document.querySelector('#ips-table tbody');
@@ -429,13 +432,13 @@
                     memo: memo
                 })
             })
-            .then(response => response.json())
+            .then(response => handleError(response))
             .then(data => {
-                if (data.success) {
+                if (data && data.success) {
                     alert('IPアドレスが追加されました。');
                     fetchIPs();
                     document.getElementById('add-ip-form').reset();
-                } else {
+                } else if (data) {
                     alert('IPアドレスの追加に失敗しました。');
                 }
             })
