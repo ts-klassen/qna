@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>QNA State List</title>
+    <title>QNA状態一覧</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,22 +43,22 @@
     </style>
 </head>
 <body>
-    <h1>QNA State List</h1>
+    <h1>QNA状態一覧</h1>
     
-    <label for="stateSelect">Select State:</label>
+    <label for="stateSelect">状態を選択:</label>
     <select id="stateSelect">
-        <option value="">--Select State--</option>
+        <option value="">--状態を選択--</option>
     </select>
     
     <table id="qnaTable">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Log Page</th>
+                <th>ログページ</th>
             </tr>
         </thead>
         <tbody>
-            <!-- QNA IDs and Log Links will be populated here -->
+            <!-- QNA IDとログリンクがここに表示されます -->
         </tbody>
     </table>
     
@@ -70,14 +70,14 @@
             const qnaTableBody = document.querySelector('#qnaTable tbody');
             const errorDiv = document.getElementById('error');
 
-            // Function to escape HTML to prevent HTML injection
+            // HTMLインジェクションを防ぐためのエスケープ関数
             function escapeHTML(str) {
                 const div = document.createElement('div');
                 div.appendChild(document.createTextNode(str));
                 return div.innerHTML;
             }
 
-            // Fetch the list of states on page load
+            // ページ読み込み時に状態の一覧を取得
             fetch('/qna/api/v2/qna/state', {
                 method: 'GET',
                 headers: {
@@ -95,19 +95,19 @@
                         stateSelect.appendChild(option);
                     });
                 } else {
-                    displayError(`Failed to fetch states: ${data.reason}`);
+                    displayError(`状態の取得に失敗しました: ${data.reason}`);
                 }
             })
             .catch(error => {
-                console.error('Error fetching states:', error);
-                displayError('An error occurred while fetching states.');
+                console.error('状態の取得中にエラーが発生しました:', error);
+                displayError('状態の取得中にエラーが発生しました。');
             });
 
-            // Handle state selection
+            // 状態選択時の処理
             stateSelect.addEventListener('change', () => {
                 const selectedState = stateSelect.value;
-                qnaTableBody.innerHTML = ''; // Clear existing table data
-                errorDiv.textContent = ''; // Clear previous errors
+                qnaTableBody.innerHTML = ''; // 既存のテーブルデータをクリア
+                errorDiv.textContent = ''; // 以前のエラーメッセージをクリア
 
                 if (selectedState) {
                     fetch('/qna/api/v2/qna/list', {
@@ -122,22 +122,22 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td colspan="2">No QNA found for this state.</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="2">この状態に該当するQNAはありません。</td></tr>';
                             } else {
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
                                     
-                                    // ID Cell
+                                    // IDセル
                                     const idCell = document.createElement('td');
                                     idCell.innerHTML = escapeHTML(qna._id);
                                     row.appendChild(idCell);
                                     
-                                    // Log Page Cell
+                                    // ログページセル
                                     const logCell = document.createElement('td');
                                     const logLink = document.createElement('a');
                                     logLink.href = `view_qna_log.html#${encodeURIComponent(qna._id)}`;
-                                    logLink.textContent = 'View Log';
-                                    logLink.target = '_blank'; // Open in a new tab
+                                    logLink.textContent = 'ログを表示';
+                                    logLink.target = '_blank'; // 新しいタブで開く
                                     logCell.appendChild(logLink);
                                     row.appendChild(logCell);
                                     
@@ -145,17 +145,17 @@
                                 });
                             }
                         } else {
-                            displayError(`Failed to fetch QNA list: ${data.reason}`);
+                            displayError(`QNA一覧の取得に失敗しました: ${data.reason}`);
                         }
                     })
                     .catch(error => {
-                        console.error('Error fetching QNA list:', error);
-                        displayError('An error occurred while fetching QNA list.');
+                        console.error('QNA一覧の取得中にエラーが発生しました:', error);
+                        displayError('QNA一覧の取得中にエラーが発生しました。');
                     });
                 }
             });
 
-            // Function to display error messages
+            // エラーメッセージを表示する関数
             function displayError(message) {
                 errorDiv.textContent = message;
             }
