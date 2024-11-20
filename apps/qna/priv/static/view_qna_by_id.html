@@ -297,7 +297,7 @@
                 }
 
                 const currentQna = qnaData.qna;
-                const updatedQna = { ...currentQna, answer: updatedAnswer, state: "human_checked" };
+                const updatedQna = { ...currentQna, answer: updatedAnswer, state: "human_answered" };
 
                 const response = await fetch('/qna/api/v2/qna/upsert', {
                     method: 'POST',
