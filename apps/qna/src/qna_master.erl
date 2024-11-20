@@ -12,7 +12,7 @@ get(Id) ->
             Base = #{ Id => [] },
             #{rev => Rev, payload => maps:merge(Base, Payload)};
         none ->
-            #{ payload => #{} }
+            #{ payload => #{ Id => [] } }
     end.
 
 -spec set(klsn:binstr(), #{}, qna_user:user()) -> ok | conflict.
