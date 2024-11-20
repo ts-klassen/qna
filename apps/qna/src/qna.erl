@@ -67,7 +67,7 @@
         }
       , last_search_result => [id()]
       , qna_version => 1
-      , log => [
+      , logs => [
             #{
                 type => create
               , time => klsn:binstr()

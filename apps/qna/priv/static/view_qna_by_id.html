@@ -333,11 +333,8 @@
                 const data = await fetchQna(qnaId);
 
                 if (data.success) {
-                    const logs = data.qna.log;
+                    const logs = data.qna.logs;
                     displayLogs(logs);
-                    // 回答欄に現在の回答を表示
-                    const answerTextarea = document.getElementById('answer');
-                    answerTextarea.value = data.qna.answer || '';
                 } else {
                     displayError(`ログの取得に失敗しました: ${data.reason}`);
                 }
