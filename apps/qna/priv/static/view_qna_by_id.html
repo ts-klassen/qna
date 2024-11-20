@@ -144,13 +144,21 @@
                 background-color: #d6ecfe;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
-            /* New styles for section boxes */
+            /* Styles for section boxes */
             .section-box {
                 border: 1px solid #ccc;
                 padding: 15px;
                 border-radius: 5px;
                 background-color: #f9f9f9;
                 margin-bottom: 20px;
+            }
+            /* Additional styles for multiple headings */
+            .heading-box {
+                border: 1px solid #ddd;
+                padding: 10px;
+                border-radius: 4px;
+                background-color: #fff;
+                margin-bottom: 10px;
             }
     </style>
 </head>
@@ -161,9 +169,8 @@
     <p>項番: <span id="no"></span></p>
 
     <h2>質問</h2>
-    <div class="section-box">
-        <h3>見出し</h3>
-        <span id="titles"></span>
+    <div id="titles-container">
+        <!-- 見出しがここに追加されます -->
     </div>
     <div class="section-box">
         <h3>質問（主文）</h3>
@@ -504,8 +511,33 @@
                     document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
 
                     // Q&Aメタデータを表示
-                    document.getElementById('titles').textContent = data.qna.embe_metadata.titles.join(', ') || '';
+                    // 見出しを個別のボックスに追加
+                    const titlesContainer = document.getElementById('titles-container');
+                    titlesContainer.innerHTML = ''; // 既存の見出しをクリア
+                    const titles = data.qna.embe_metadata.titles || [];
+                    if (titles.length === 0) {
+                        const emptyBox = document.createElement('div');
+                        emptyBox.className = 'heading-box';
+                        emptyBox.innerText = '見出しがありません。';
+                        titlesContainer.appendChild(emptyBox);
+                    } else {
+                        titles.forEach(title => {
+                            const box = document.createElement('div');
+                            box.className = 'heading-box';
+                            const heading = document.createElement('h3');
+                            heading.textContent = '見出し';
+                            const titleText = document.createElement('span');
+                            titleText.textContent = title;
+                            box.appendChild(heading);
+                            box.appendChild(titleText);
+                            titlesContainer.appendChild(box);
+                        });
+                    }
+
+                    // 質問（主文）の表示
                     document.getElementById('question').textContent = data.qna.embe_metadata.question || '';
+
+                    // 質問補足の表示
                     document.getElementById('notes').textContent = data.qna.embe_metadata.notes.join(', ') || '';
 
                     // 回答が確認済みかどうかはあえてチェックしない
