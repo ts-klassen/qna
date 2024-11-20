@@ -130,6 +130,20 @@
         #message.error {
             color: red;
         }
+        /* Styles for overview boxes */
+        .overview-box {
+            border: 1px solid #3498db;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #ecf6fe;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .overview-box:hover {
+            background-color: #d6ecfe;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -223,7 +237,16 @@
                         var overview = `${score}: ${csv}`
                         res.push({detailLink, overview});
                     }
-                    // 指示: content.appendChild() を使って、 overview を表示する箱を作り、クリックしたら別タブで detailLink を開くようにして。
+                    // 指示: content.appendChild() を使って、各 res[].overview を表示する箱を作り、クリックしたら別タブで各 res[].detailLink を開くようにして
+                    res.forEach(item => {
+                        const box = document.createElement('div');
+                        box.classList.add('overview-box');
+                        box.innerText = item.overview;
+                        box.addEventListener('click', () => {
+                            window.open(item.detailLink, '_blank');
+                        });
+                        content.appendChild(box);
+                    });
                 }
                 else if (log.type === 'ai_answering') {
                     logEntry.classList.add('type-ai-answering');
