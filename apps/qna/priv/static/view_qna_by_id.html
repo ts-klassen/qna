@@ -30,7 +30,40 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
         }
-        #update-form button {
+        #update-form .sup-container {
+            margin-bottom: 10px;
+        }
+        #update-form .sup-container textarea {
+            min-height: 60px;
+        }
+        #update-form .sup-container button {
+            margin-top: 5px;
+            align-self: flex-end;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #update-form .sup-container button:hover {
+            background-color: #c0392b;
+        }
+        #add-sup-button {
+            width: 150px;
+            padding: 10px;
+            align-self: flex-start;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        #add-sup-button:hover {
+            background-color: #2980b9;
+        }
+        #update-form button.submit-button {
             width: 100px;
             padding: 10px;
             align-self: flex-end;
@@ -40,7 +73,7 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        #update-form button:hover {
+        #update-form button.submit-button:hover {
             background-color: #45a049;
         }
         #log-container {
@@ -100,7 +133,14 @@
         <form id="update-form">
             <label for="answer">回答を編集してください:</label>
             <textarea id="answer" name="answer"></textarea>
-            <button type="submit">保存</button>
+
+            <h3>補足回答を編集してください:</h3>
+            <div id="sup-container">
+                <!-- 補足回答がここに追加されます -->
+            </div>
+            <button type="button" id="add-sup-button">補足回答を追加</button>
+
+            <button type="submit" class="submit-button">保存</button>
         </form>
     </div>
 
@@ -134,7 +174,7 @@
             var prodMst = await fetchProdMst();
             var prodName = (prodId) => {
                 var prod = prodMst.payload.products.find((e)=>e.id==prodId);
-                return prod.name;
+                return prod ? prod.name : 'Unknown Product';
             };
 
             for(var log of logs) {
@@ -288,7 +328,7 @@
         }
 
         // QNAを更新
-        async function updateQna(qnaId, updatedAnswer) {
+        async function updateQna(qnaId, updatedAnswer, updatedAnswerSup) {
             try {
                 // まず、現在のQNAデータを取得
                 const qnaData = await fetchQna(qnaId);
@@ -297,7 +337,12 @@
                 }
 
                 const currentQna = qnaData.qna;
-                const updatedQna = { ...currentQna, answer: updatedAnswer, state: "human_answered" };
+                const updatedQna = { 
+                    ...currentQna, 
+                    answer: updatedAnswer, 
+                    answer_sup: updatedAnswerSup, 
+                    state: "human_answered" 
+                };
 
                 const response = await fetch('/qna/api/v2/qna/upsert', {
                     method: 'POST',
@@ -326,6 +371,28 @@
             }
         }
 
+        // 補足回答を追加
+        function addSupAnswer(value = '') {
+            const supContainer = document.getElementById('sup-container');
+            const supDiv = document.createElement('div');
+            supDiv.className = 'sup-container';
+
+            const textarea = document.createElement('textarea');
+            textarea.name = 'answer_sup';
+            textarea.value = value;
+            supDiv.appendChild(textarea);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = '削除';
+            removeButton.addEventListener('click', () => {
+                supContainer.removeChild(supDiv);
+            });
+            supDiv.appendChild(removeButton);
+
+            supContainer.appendChild(supDiv);
+        }
+
         // ログデータを取得
         async function fetchLogs(qnaId) {
             try {
@@ -337,6 +404,18 @@
                     // 回答欄に現在の回答を表示
                     const answerTextarea = document.getElementById('answer');
                     answerTextarea.value = data.qna.answer || '';
+
+                    // 補足回答を表示
+                    const supContainer = document.getElementById('sup-container');
+                    supContainer.innerHTML = ''; // 既存の補足回答をクリア
+                    const answerSup = data.qna.answer_sup || [];
+                    if (answerSup.length === 0) {
+                        addSupAnswer();
+                    } else {
+                        for (let sup of answerSup) {
+                            addSupAnswer(sup);
+                        }
+                    }
                 } else {
                     displayError(`ログの取得に失敗しました: ${data.reason}`);
                 }
@@ -362,7 +441,23 @@
                     displayFormError('回答は空にできません。');
                     return;
                 }
-                updateQna(qnaId, updatedAnswer);
+
+                // Collect all supplementary answers
+                const supTextareas = document.querySelectorAll('textarea[name="answer_sup"]');
+                const updatedAnswerSup = [];
+                supTextareas.forEach(textarea => {
+                    const sup = textarea.value.trim();
+                    if (sup !== "") {
+                        updatedAnswerSup.push(sup);
+                    }
+                });
+
+                updateQna(qnaId, updatedAnswer, updatedAnswerSup);
+            });
+
+            const addSupButton = document.getElementById('add-sup-button');
+            addSupButton.addEventListener('click', () => {
+                addSupAnswer();
             });
         }
 
