@@ -90,60 +90,60 @@
             overflow-y: auto;
             background-color: #f9f9f9;
         }
-        .log-entry {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .log-entry.type-create {
-            background-color: #e8f5e9;
-        }
-        .log-entry.type-update {
-            background-color: #e8f5e9;
-        }
-        .log-entry.type-embed {
-            background-color: #e0f7fa;
-        }
-        .log-entry.type-search {
-            background-color: #e0f7fa;
-        }
-        .log-entry.type-ai-answering {
-            background-color: #e0f7fa;
-        }
-        .log-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .log-content {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        #message {
-            max-width: 800px;
-            margin: 10px auto;
-            text-align: center;
-            font-weight: bold;
-        }
-        #message.success {
-            color: green;
-        }
-        #message.error {
-            color: red;
-        }
-        /* Styles for overview boxes */
-        .overview-box {
-            border: 1px solid #3498db;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            background-color: #ecf6fe;
-            cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-        .overview-box:hover {
-            background-color: #d6ecfe;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+            .log-entry {
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+            }
+            .log-entry.type-create {
+                background-color: #e8f5e9;
+            }
+            .log-entry.type-update {
+                background-color: #e8f5e9;
+            }
+            .log-entry.type-embed {
+                background-color: #e0f7fa;
+            }
+            .log-entry.type-search {
+                background-color: #e0f7fa;
+            }
+            .log-entry.type-ai-answering {
+                background-color: #e0f7fa;
+            }
+            .log-header {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .log-content {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            #message {
+                max-width: 800px;
+                margin: 10px auto;
+                text-align: center;
+                font-weight: bold;
+            }
+            #message.success {
+                color: green;
+            }
+            #message.error {
+                color: red;
+            }
+            /* Styles for overview boxes */
+            .overview-box {
+                border: 1px solid #3498db;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+                background-color: #ecf6fe;
+                cursor: pointer;
+                transition: background-color 0.3s, box-shadow 0.3s;
+            }
+            .overview-box:hover {
+                background-color: #d6ecfe;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
     </style>
 </head>
 <body>
@@ -237,7 +237,6 @@
                         var overview = `${score}: ${csv}`
                         res.push({detailLink, overview});
                     }
-                    // 指示: content.appendChild() を使って、各 res[].overview を表示する箱を作り、クリックしたら別タブで各 res[].detailLink を開くようにして
                     res.forEach(item => {
                         const box = document.createElement('div');
                         box.classList.add('overview-box');
