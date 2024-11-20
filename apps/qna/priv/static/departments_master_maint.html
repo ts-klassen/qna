@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>部署マスタメンテナンス</title>
+    <style>
+        /* シンプルなスタイル */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed; /* Ensures that the table respects the defined widths */
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word; /* Prevents long content from overflowing */
+        }
+        .actions-column {
+            width: 8em; /* Adjusted width for Actions column */
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-right: 4px;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+        .button {
+            padding: 10px 20px; /* Increased padding for wider buttons */
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            width: 100%; /* Make buttons full width */
+            box-sizing: border-box;
+            margin-top: 10px; /* Add some space above buttons */
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .edit-button {
+            width: 6em; /* Set fixed width for Edit buttons */
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        #addDepartmentForm, #editDepartmentForm {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .input-field {
+            width: 100%; /* 部署名の入力欄を同じ幅に */
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>部署マスタメンテナンス</h1>
+
+    <!-- 新規追加フォーム -->
+    <div id="addDepartmentForm">
+        <h2>新規部署追加</h2>
+        <div class="form-group">
+            <label for="newDepartmentName">部署名:</label>
+            <input type="text" id="newDepartmentName" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitAddDepartmentBtn" class="button">追加</button>
+        </div>
+    </div>
+
+    <!-- 編集フォーム -->
+    <div id="editDepartmentForm" style="display: none;">
+        <h2>部署編集</h2>
+        <input type="hidden" id="editDepartmentId">
+        <div class="form-group">
+            <label for="editDepartmentName">部署名:</label>
+            <input type="text" id="editDepartmentName" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitEditDepartmentBtn" class="button">保存</button>
+        </div>
+        <div class="form-group">
+            <button type="button" id="cancelEditDepartmentBtn" class="button">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- 部署一覧テーブル -->
+    <table id="departmentsTable">
+        <thead>
+            <tr>
+                <!-- 部署ID列を削除 -->
+                <th>部署名</th>
+                <th class="actions-column">操作</th> <!-- Added class for column width -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- データはここに挿入されます -->
+        </tbody>
+    </table>
+
+    <script>
+        const BASE_URI = '/qna/api/v2';
+        let currentRev = null; // revを保持する変数
+        let departments = []; // 既存部署を保持する変数
+
+        // UUID生成関数
+        var generateUUID = function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (c === 'y' ? (r & 0x3 | 0x8) : r);
+                return v.toString(16);
+            });
+        };
+
+        // 編集キャンセル関数
+        var cancelEdit = function() {
+            console.log('キャンセルボタンが押されました。');
+            document.getElementById('editDepartmentForm').style.display = 'none';
+            clearEditForm();
+            document.getElementById('addDepartmentForm').style.display = 'block';
+        };
+
+        // 部署編集フォームの表示関数をグローバルに定義
+        var openEditForm = function(department) {
+            // 新規追加フォームを非表示に
+            document.getElementById('addDepartmentForm').style.display = 'none';
+
+            // 編集フォームを表示
+            var editForm = document.getElementById('editDepartmentForm');
+            editForm.style.display = 'block';
+            document.getElementById('editDepartmentId').value = department.id;
+            document.getElementById('editDepartmentName').value = department.name;
+        };
+
+        // 編集フォームのリセット関数をグローバルに定義
+        var clearEditForm = function() {
+            document.getElementById('editDepartmentId').value = '';
+            document.getElementById('editDepartmentName').value = '';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            var departmentsTableBody = document.querySelector('#departmentsTable tbody');
+            var submitAddDepartmentBtn = document.getElementById('submitAddDepartmentBtn');
+
+            var editDepartmentForm = document.getElementById('editDepartmentForm');
+            var cancelEditDepartmentBtn = document.getElementById('cancelEditDepartmentBtn');
+            var submitEditDepartmentBtn = document.getElementById('submitEditDepartmentBtn');
+
+            // 部署データの取得と表示
+            var fetchDepartments = function() {
+                fetch(BASE_URI + '/master/departments', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        departments = data.payload.departments; // 部署データを更新
+                        currentRev = data.rev || null; // revを更新
+                        renderDepartments(departments);
+                    } else {
+                        alert('部署データの取得に失敗しました。');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching departments:', error);
+                });
+            };
+
+            // テーブルに部署を表示
+            var renderDepartments = function(departments) {
+                departmentsTableBody.innerHTML = '';
+                departments.forEach(function(department) {
+                    var tr = document.createElement('tr');
+
+                    var tdName = document.createElement('td');
+                    tdName.textContent = department.name;
+                    tr.appendChild(tdName);
+
+                    var tdActions = document.createElement('td');
+                    tdActions.className = 'actions-column'; // Added class for column width
+                    var editBtn = document.createElement('button');
+                    editBtn.textContent = '編集';
+                    editBtn.className = 'button edit-button'; // 追加: edit-buttonクラスを適用
+                    editBtn.addEventListener('click', () => openEditForm(department));
+                    tdActions.appendChild(editBtn);
+                    tr.appendChild(tdActions);
+
+                    departmentsTableBody.appendChild(tr);
+                });
+            };
+
+            // 新規部署の追加
+            submitAddDepartmentBtn.addEventListener('click', () => {
+                var name = document.getElementById('newDepartmentName').value.trim();
+
+                if(name === '') {
+                    alert('部署名を入力してください。');
+                    return;
+                }
+
+                var newDepartment = {
+                    id: generateUUID(),
+                    name: name
+                };
+
+                // 既存の部署データに新しい部署を追加
+                var updatedDepartments = [...departments, newDepartment];
+
+                var requestBody = {
+                    payload: {
+                        departments: updatedDepartments
+                    }
+                };
+
+                if(currentRev) {
+                    requestBody.rev = currentRev; // revを追加
+                }
+
+                fetch(BASE_URI + '/master/departments', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        fetchDepartments();
+                        clearAddForm();
+                    } else {
+                        if(data.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchDepartments();
+                        } else {
+                            alert('部署の追加に失敗しました。原因: ' + data.reason);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding department:', error);
+                });
+            });
+
+            // 編集フォームの保存
+            submitEditDepartmentBtn.addEventListener('click', () => {
+                var id = document.getElementById('editDepartmentId').value;
+                var name = document.getElementById('editDepartmentName').value.trim();
+
+                if(name === '') {
+                    alert('部署名を入力してください。');
+                    return;
+                }
+
+                if(!currentRev) {
+                    alert('現在のデータバージョンが取得できていません。最新のデータを再取得してください。');
+                    fetchDepartments();
+                    return;
+                }
+
+                // 対象部署を配列から検索
+                var existingDepartment = departments.find(p => p.id === id);
+                if(!existingDepartment) {
+                    alert('更新対象の部署が見つかりません。');
+                    return;
+                }
+
+                var updatedDepartment = {
+                    id: id,
+                    name: name
+                };
+
+                // 更新された部署リストを作成
+                var updatedDepartments = departments.map(p => p.id === id ? updatedDepartment : p);
+
+                var requestBody = {
+                    payload: {
+                        departments: updatedDepartments
+                    },
+                    rev: currentRev // revを必ず指定
+                };
+
+                fetch(BASE_URI + '/master/departments', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(function(updateData) {
+                    if(updateData.success) {
+                        fetchDepartments();
+                        cancelEdit();
+                    } else {
+                        if(updateData.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchDepartments();
+                        } else {
+                            alert('部署の更新に失敗しました。原因: ' + updateData.reason);
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error updating department:', error);
+                });
+            });
+
+            // 編集フォームのキャンセル
+            cancelEditDepartmentBtn.addEventListener('click', () => {
+                cancelEdit();
+            });
+
+            // 新規追加フォームのリセット
+            var clearAddForm = function() {
+                document.getElementById('newDepartmentName').value = '';
+            };
+
+            // 編集フォームのリセット
+            var clearEditForm = function() {
+                document.getElementById('editDepartmentId').value = '';
+                document.getElementById('editDepartmentName').value = '';
+            };
+
+            // 初期データの取得
+            fetchDepartments();
+        });
+    </script>
+
+</body>
+</html>

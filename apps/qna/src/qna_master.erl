@@ -9,9 +9,10 @@
 get(Id) ->
     case klsn_db:lookup(?MODULE, Id) of
         {value, #{<<"_rev">>:=Rev, <<"payload">>:=Payload}} ->
-            #{rev => Rev, payload => Payload};
+            Base = #{ Id => [] },
+            #{rev => Rev, payload => maps:merge(Base, Payload)};
         none ->
-            #{ payload => #{} }
+            #{ payload => #{ Id => [] } }
     end.
 
 -spec set(klsn:binstr(), #{}, qna_user:user()) -> ok | conflict.
