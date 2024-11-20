@@ -24,6 +24,11 @@
             vertical-align: top;
             word-wrap: break-word; /* Prevents long content from overflowing */
         }
+        .drag-handle {
+            cursor: grab;
+            text-align: center;
+            width: 40px;
+        }
         .actions-column {
             width: 8em; /* Adjusted width for Actions column */
         }
@@ -76,6 +81,8 @@
             flex-direction: column;
         }
     </style>
+    <!-- SortableJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
 
@@ -127,6 +134,7 @@
     <table id="sheetItemsTable">
         <thead>
             <tr>
+                <th class="drag-handle">⇕</th>
                 <th>シート項目名</th>
                 <th>非表示</th>
                 <th class="actions-column">操作</th>
@@ -201,6 +209,7 @@
                         sheetItems = data.payload.sheet_items; // シート項目データを更新
                         currentRev = data.rev || null; // revを更新
                         renderSheetItems(sheetItems);
+                        initializeSortable();
                     } else {
                         alert('シート項目データの取得に失敗しました。');
                     }
@@ -215,6 +224,12 @@
                 sheetItemsTableBody.innerHTML = '';
                 sheetItems.forEach(function(sheetItem) {
                     var tr = document.createElement('tr');
+
+                    // Drag Handle Column
+                    var tdDrag = document.createElement('td');
+                    tdDrag.className = 'drag-handle';
+                    tdDrag.innerHTML = '⇕';
+                    tr.appendChild(tdDrag);
 
                     var tdName = document.createElement('td');
                     tdName.textContent = sheetItem.name;
@@ -234,6 +249,31 @@
                     tr.appendChild(tdActions);
 
                     sheetItemsTableBody.appendChild(tr);
+                });
+            };
+
+            // Initialize SortableJS
+            var initializeSortable = function() {
+                new Sortable(sheetItemsTableBody, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: function (evt) {
+                        // 更新後の順序を取得
+                        var newOrder = [];
+                        sheetItemsTableBody.querySelectorAll('tr').forEach(function(row) {
+                            var id = row.querySelector('td:nth-child(2)').textContent.trim();
+                            var sheetItem = sheetItems.find(item => item.name === id);
+                            if(sheetItem) {
+                                newOrder.push(sheetItem);
+                            }
+                        });
+
+                        // シート項目の並び順を更新
+                        sheetItems = newOrder;
+
+                        // バックエンドに変更を反映
+                        updateSheetItems();
+                    }
                 });
             };
 
@@ -376,6 +416,44 @@
                 document.getElementById('editSheetItemId').value = '';
                 document.getElementById('editSheetItemName').value = '';
                 document.getElementById('editSheetItemVisibility').value = 'false';
+            };
+
+            // シート項目の並び順をバックエンドに送信
+            var updateSheetItems = function() {
+                var requestBody = {
+                    payload: {
+                        sheet_items: sheetItems
+                    }
+                };
+
+                if(currentRev) {
+                    requestBody.rev = currentRev;
+                }
+
+                fetch(BASE_URI + '/master/sheet_items', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        fetchSheetItems();
+                    } else {
+                        if(data.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchSheetItems();
+                        } else {
+                            alert('シート項目の更新に失敗しました。原因: ' + data.reason);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating sheet items order:', error);
+                });
             };
 
             // 初期データの取得
