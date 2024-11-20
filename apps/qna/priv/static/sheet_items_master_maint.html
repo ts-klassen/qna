@@ -101,7 +101,7 @@
             <input type="text" id="newSheetItemName" class="input-field" required>
         </div>
         <div class="form-group">
-            <label for="newSheetItemVisibility">非表示:</label>
+            <label for="newSheetItemVisibility">一覧画面での表示:</label>
             <select id="newSheetItemVisibility" class="input-field">
                 <option value="false">表示</option>
                 <option value="true">非表示</option>
@@ -121,7 +121,7 @@
             <input type="text" id="editSheetItemName" class="input-field" required>
         </div>
         <div class="form-group">
-            <label for="editSheetItemVisibility">非表示:</label>
+            <label for="editSheetItemVisibility">一覧画面での表示:</label>
             <select id="editSheetItemVisibility" class="input-field">
                 <option value="false">表示</option>
                 <option value="true">非表示</option>
@@ -137,13 +137,13 @@
 
     <!-- 表示リスト -->
     <div class="sortable-container">
-        <h2>表示項目</h2>
+        <h2>一覧画面で表示する項目</h2>
         <table id="displayedSheetItemsTable">
             <thead>
                 <tr>
-                    <th class="drag-handle">⇕</th>
+                    <th class="drag-handle">並び替え</th>
                     <th>シート項目名</th>
-                    <th>非表示</th>
+                    <th>一覧表示</th>
                     <th class="actions-column">操作</th>
                 </tr>
             </thead>
@@ -155,13 +155,13 @@
 
     <!-- 非表示リスト -->
     <div class="sortable-container">
-        <h2>非表示項目</h2>
+        <h2>一覧画面で非表示の項目</h2>
         <table id="hiddenSheetItemsTable">
             <thead>
                 <tr>
-                    <th class="drag-handle">⇕</th>
+                    <th class="drag-handle">並び替え</th>
                     <th>シート項目名</th>
-                    <th>非表示</th>
+                    <th>一覧表示</th>
                     <th class="actions-column">操作</th>
                 </tr>
             </thead>
