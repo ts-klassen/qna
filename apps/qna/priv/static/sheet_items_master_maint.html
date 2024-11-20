@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シート項目マスタメンテナンス</title>
+    <style>
+        /* シンプルなスタイル */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed; /* Ensures that the table respects the defined widths */
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word; /* Prevents long content from overflowing */
+        }
+        .actions-column {
+            width: 8em; /* Adjusted width for Actions column */
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-right: 4px;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+        .button {
+            padding: 10px 20px; /* Increased padding for wider buttons */
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            width: 100%; /* Make buttons full width */
+            box-sizing: border-box;
+            margin-top: 10px; /* Add some space above buttons */
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .edit-button {
+            width: 6em; /* Set fixed width for Edit buttons */
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        #addSheetItemForm, #editSheetItemForm {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .input-field {
+            width: 100%; /* 入力欄を同じ幅に */
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>シート項目マスタメンテナンス</h1>
+
+    <!-- 新規追加フォーム -->
+    <div id="addSheetItemForm">
+        <h2>新規シート項目追加</h2>
+        <div class="form-group">
+            <label for="newSheetItemName">シート項目名:</label>
+            <input type="text" id="newSheetItemName" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <label for="newSheetItemVisibility">非表示:</label>
+            <select id="newSheetItemVisibility" class="input-field">
+                <option value="false">表示</option>
+                <option value="true">非表示</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitAddSheetItemBtn" class="button">追加</button>
+        </div>
+    </div>
+
+    <!-- 編集フォーム -->
+    <div id="editSheetItemForm" style="display: none;">
+        <h2>シート項目編集</h2>
+        <input type="hidden" id="editSheetItemId">
+        <div class="form-group">
+            <label for="editSheetItemName">シート項目名:</label>
+            <input type="text" id="editSheetItemName" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <label for="editSheetItemVisibility">非表示:</label>
+            <select id="editSheetItemVisibility" class="input-field">
+                <option value="false">表示</option>
+                <option value="true">非表示</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="button" id="submitEditSheetItemBtn" class="button">保存</button>
+        </div>
+        <div class="form-group">
+            <button type="button" id="cancelEditSheetItemBtn" class="button">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- シート項目一覧テーブル -->
+    <table id="sheetItemsTable">
+        <thead>
+            <tr>
+                <th>シート項目名</th>
+                <th>非表示</th>
+                <th class="actions-column">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- データはここに挿入されます -->
+        </tbody>
+    </table>
+
+    <script>
+        const BASE_URI = '/qna/api/v2';
+        let currentRev = null; // revを保持する変数
+        let sheetItems = []; // 既存シート項目を保持する変数
+
+        // UUID生成関数
+        var generateUUID = function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (c === 'y' ? (r & 0x3 | 0x8) : r);
+                return v.toString(16);
+            });
+        };
+
+        // 編集キャンセル関数
+        var cancelEdit = function() {
+            console.log('キャンセルボタンが押されました。');
+            document.getElementById('editSheetItemForm').style.display = 'none';
+            clearEditForm();
+            document.getElementById('addSheetItemForm').style.display = 'block';
+        };
+
+        // シート項目編集フォームの表示関数をグローバルに定義
+        var openEditForm = function(sheetItem) {
+            // 新規追加フォームを非表示に
+            document.getElementById('addSheetItemForm').style.display = 'none';
+
+            // 編集フォームを表示
+            var editForm = document.getElementById('editSheetItemForm');
+            editForm.style.display = 'block';
+            document.getElementById('editSheetItemId').value = sheetItem.id;
+            document.getElementById('editSheetItemName').value = sheetItem.name;
+            document.getElementById('editSheetItemVisibility').value = sheetItem.is_hidden.toString();
+        };
+
+        // 編集フォームのリセット関数をグローバルに定義
+        var clearEditForm = function() {
+            document.getElementById('editSheetItemId').value = '';
+            document.getElementById('editSheetItemName').value = '';
+            document.getElementById('editSheetItemVisibility').value = 'false';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            var sheetItemsTableBody = document.querySelector('#sheetItemsTable tbody');
+            var submitAddSheetItemBtn = document.getElementById('submitAddSheetItemBtn');
+
+            var editSheetItemForm = document.getElementById('editSheetItemForm');
+            var cancelEditSheetItemBtn = document.getElementById('cancelEditSheetItemBtn');
+            var submitEditSheetItemBtn = document.getElementById('submitEditSheetItemBtn');
+
+            // シート項目データの取得と表示
+            var fetchSheetItems = function() {
+                fetch(BASE_URI + '/master/sheet_items', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        sheetItems = data.payload.sheet_items; // シート項目データを更新
+                        currentRev = data.rev || null; // revを更新
+                        renderSheetItems(sheetItems);
+                    } else {
+                        alert('シート項目データの取得に失敗しました。');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sheet items:', error);
+                });
+            };
+
+            // テーブルにシート項目を表示
+            var renderSheetItems = function(sheetItems) {
+                sheetItemsTableBody.innerHTML = '';
+                sheetItems.forEach(function(sheetItem) {
+                    var tr = document.createElement('tr');
+
+                    var tdName = document.createElement('td');
+                    tdName.textContent = sheetItem.name;
+                    tr.appendChild(tdName);
+
+                    var tdVisibility = document.createElement('td');
+                    tdVisibility.textContent = sheetItem.is_hidden ? '非表示' : '表示';
+                    tr.appendChild(tdVisibility);
+
+                    var tdActions = document.createElement('td');
+                    tdActions.className = 'actions-column'; // Added class for column width
+                    var editBtn = document.createElement('button');
+                    editBtn.textContent = '編集';
+                    editBtn.className = 'button edit-button'; // 追加: edit-buttonクラスを適用
+                    editBtn.addEventListener('click', () => openEditForm(sheetItem));
+                    tdActions.appendChild(editBtn);
+                    tr.appendChild(tdActions);
+
+                    sheetItemsTableBody.appendChild(tr);
+                });
+            };
+
+            // 新規シート項目の追加
+            submitAddSheetItemBtn.addEventListener('click', () => {
+                var name = document.getElementById('newSheetItemName').value.trim();
+                var is_hidden = document.getElementById('newSheetItemVisibility').value === 'true';
+
+                if(name === '') {
+                    alert('シート項目名を入力してください。');
+                    return;
+                }
+
+                var newSheetItem = {
+                    id: generateUUID(),
+                    name: name,
+                    is_hidden: is_hidden
+                };
+
+                // 既存のシート項目データに新しいシート項目を追加
+                var updatedSheetItems = [...sheetItems, newSheetItem];
+
+                var requestBody = {
+                    payload: {
+                        sheet_items: updatedSheetItems
+                    }
+                };
+
+                if(currentRev) {
+                    requestBody.rev = currentRev; // revを追加
+                }
+
+                fetch(BASE_URI + '/master/sheet_items', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        fetchSheetItems();
+                        clearAddForm();
+                    } else {
+                        if(data.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchSheetItems();
+                        } else {
+                            alert('シート項目の追加に失敗しました。原因: ' + data.reason);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding sheet item:', error);
+                });
+            });
+
+            // 編集フォームの保存
+            submitEditSheetItemBtn.addEventListener('click', () => {
+                var id = document.getElementById('editSheetItemId').value;
+                var name = document.getElementById('editSheetItemName').value.trim();
+                var is_hidden = document.getElementById('editSheetItemVisibility').value === 'true';
+
+                if(name === '') {
+                    alert('シート項目名を入力してください。');
+                    return;
+                }
+
+                if(!currentRev) {
+                    alert('現在のデータバージョンが取得できていません。最新のデータを再取得してください。');
+                    fetchSheetItems();
+                    return;
+                }
+
+                // 対象シート項目を配列から検索
+                var existingSheetItem = sheetItems.find(item => item.id === id);
+                if(!existingSheetItem) {
+                    alert('更新対象のシート項目が見つかりません。');
+                    return;
+                }
+
+                var updatedSheetItem = {
+                    id: id,
+                    name: name,
+                    is_hidden: is_hidden
+                };
+
+                // 更新されたシート項目リストを作成
+                var updatedSheetItems = sheetItems.map(item => item.id === id ? updatedSheetItem : item);
+
+                var requestBody = {
+                    payload: {
+                        sheet_items: updatedSheetItems
+                    },
+                    rev: currentRev // revを必ず指定
+                };
+
+                fetch(BASE_URI + '/master/sheet_items', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(function(updateData) {
+                    if(updateData.success) {
+                        fetchSheetItems();
+                        cancelEdit();
+                    } else {
+                        if(updateData.reason === 'conflict') {
+                            alert('データに競合が発生しました。最新のデータを取得します。');
+                            fetchSheetItems();
+                        } else {
+                            alert('シート項目の更新に失敗しました。原因: ' + updateData.reason);
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error updating sheet item:', error);
+                });
+            });
+
+            // 編集フォームのキャンセル
+            cancelEditSheetItemBtn.addEventListener('click', () => {
+                cancelEdit();
+            });
+
+            // 新規追加フォームのリセット
+            var clearAddForm = function() {
+                document.getElementById('newSheetItemName').value = '';
+                document.getElementById('newSheetItemVisibility').value = 'false';
+            };
+
+            // 編集フォームのリセット
+            var clearEditForm = function() {
+                document.getElementById('editSheetItemId').value = '';
+                document.getElementById('editSheetItemName').value = '';
+                document.getElementById('editSheetItemVisibility').value = 'false';
+            };
+
+            // 初期データの取得
+            fetchSheetItems();
+        });
+    </script>
+
+</body>
+</html>
