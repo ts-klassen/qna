@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>QNA状態一覧</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        select {
+            padding: 5px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #error {
+            color: red;
+            margin-top: 20px;
+        }
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>QNA状態一覧</h1>
+    
+    <label for="stateSelect">状態を選択:</label>
+    <select id="stateSelect">
+        <option value="">--状態を選択--</option>
+    </select>
+    
+    <table id="qnaTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>製品名</th>
+                <th>製品バージョン</th>
+                <th>番号</th>
+                <th>ログページ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- QNA IDと詳細およびログリンクがここに表示されます -->
+        </tbody>
+    </table>
+    
+    <div id="error"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stateSelect = document.getElementById('stateSelect');
+            const qnaTableBody = document.querySelector('#qnaTable tbody');
+            const errorDiv = document.getElementById('error');
+
+            let productMap = {}; // 製品IDから製品名へのマッピング
+
+            // HTMLインジェクションを防ぐためのエスケープ関数
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.appendChild(document.createTextNode(str));
+                return div.innerHTML;
+            }
+
+            // マスタデータ（製品情報）の取得
+            function fetchMasterData() {
+                return fetch('/qna/api/v2/master/products', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.payload.products.forEach(product => {
+                            productMap[product.id] = product.name;
+                        });
+                    } else {
+                        displayError(`製品マスタの取得に失敗しました: ${data.reason}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('製品マスタの取得中にエラーが発生しました:', error);
+                    displayError('製品マスタの取得中にエラーが発生しました。');
+                });
+            }
+
+            // 状態の一覧を取得
+            function fetchStates() {
+                return fetch('/qna/api/v2/qna/state', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.state_list.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state;
+                            option.textContent = state;
+                            stateSelect.appendChild(option);
+                        });
+                    } else {
+                        displayError(`状態の取得に失敗しました: ${data.reason}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('状態の取得中にエラーが発生しました:', error);
+                    displayError('状態の取得中にエラーが発生しました。');
+                });
+            }
+
+            // ページ読み込み時にマスタデータと状態一覧を取得
+            Promise.all([fetchMasterData(), fetchStates()])
+                .catch(error => {
+                    console.error('初期データの取得中にエラーが発生しました:', error);
+                    displayError('初期データの取得中にエラーが発生しました。');
+                });
+
+            // 状態選択時の処理
+            stateSelect.addEventListener('change', () => {
+                const selectedState = stateSelect.value;
+                qnaTableBody.innerHTML = ''; // 既存のテーブルデータをクリア
+                errorDiv.textContent = ''; // 以前のエラーメッセージをクリア
+
+                if (selectedState) {
+                    fetch('/qna/api/v2/qna/list', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ state: selectedState })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.qna_list.length === 0) {
+                                qnaTableBody.innerHTML = '<tr><td colspan="5">この状態に該当するQNAはありません。</td></tr>';
+                            } else {
+                                data.qna_list.forEach(qna => {
+                                    const row = document.createElement('tr');
+                                    
+                                    // IDセル
+                                    const idCell = document.createElement('td');
+                                    idCell.innerHTML = escapeHTML(qna._id);
+                                    row.appendChild(idCell);
+                                    
+                                    // 製品名セル
+                                    const productName = productMap[qna.embe_metadata.product_id] || '不明な製品';
+                                    const productNameCell = document.createElement('td');
+                                    productNameCell.innerHTML = escapeHTML(productName);
+                                    row.appendChild(productNameCell);
+                                    
+                                    // 製品バージョンセル
+                                    const productVersionCell = document.createElement('td');
+                                    productVersionCell.innerHTML = escapeHTML(qna.embe_metadata.product_version || 'N/A');
+                                    row.appendChild(productVersionCell);
+                                    
+                                    // 番号セル
+                                    const noCell = document.createElement('td');
+                                    noCell.innerHTML = escapeHTML(qna.embe_metadata.no || 'N/A');
+                                    row.appendChild(noCell);
+                                    
+                                    // ログページセル
+                                    const logCell = document.createElement('td');
+                                    const logLink = document.createElement('a');
+                                    logLink.href = `view_qna_log.html#${encodeURIComponent(qna._id)}`;
+                                    logLink.textContent = 'ログを表示';
+                                    logLink.target = '_blank'; // 新しいタブで開く
+                                    logCell.appendChild(logLink);
+                                    row.appendChild(logCell);
+                                    
+                                    qnaTableBody.appendChild(row);
+                                });
+                            }
+                        } else {
+                            displayError(`QNA一覧の取得に失敗しました: ${data.reason}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('QNA一覧の取得中にエラーが発生しました:', error);
+                        displayError('QNA一覧の取得中にエラーが発生しました。');
+                    });
+                }
+            });
+
+            // エラーメッセージを表示する関数
+            function displayError(message) {
+                errorDiv.textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>
