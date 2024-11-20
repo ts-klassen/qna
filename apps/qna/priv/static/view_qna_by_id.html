@@ -147,6 +147,11 @@
     </style>
 </head>
 <body>
+    <h2>情報</h2>
+    <p>製品ID: <span id="product_id"></span></p>
+    <p>製品バージョン: <span id="product_version"></span></p>
+    <p>項番: <span id="no"></span></p>
+
     <h2>回答とその補足</h2>
     <div id="update-container">
         <form id="update-form">
@@ -465,6 +470,11 @@
                             addSupAnswer(sup);
                         }
                     }
+
+                    // 製品情報を表示
+                    document.getElementById('product_id').textContent = data.qna.product_id || '';
+                    document.getElementById('product_version').textContent = data.qna.product_version || '';
+                    document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
 
                     // 回答が確認済みかどうかはあえてチェックしない
                 } else {
