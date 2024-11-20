@@ -196,6 +196,7 @@
         <p>製品名: <span id="product_name"></span></p>
         <p>製品バージョン: <span id="product_version"></span></p>
         <p>項番: <span id="no"></span></p>
+        <p>状態: <span id="state"></span></p>
     
         <h2>質問</h2>
         <table id="titles-table">
@@ -559,6 +560,7 @@
                         document.getElementById('product_name').textContent = prodName(data.qna.embe_metadata.product_id) || 'Unknown Product';
                         document.getElementById('product_version').textContent = data.qna.embe_metadata.product_version || '';
                         document.getElementById('no').textContent = data.qna.embe_metadata.no || '';
+                        document.getElementById('state').textContent = data.qna.state || '';
     
                         // Q&Aメタデータを表示
                         // 見出しをテーブルに追加
