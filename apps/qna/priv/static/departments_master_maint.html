@@ -13,6 +13,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            table-layout: fixed; /* Ensures that the table respects the defined widths */
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -21,6 +22,10 @@
             padding: 8px;
             text-align: left;
             vertical-align: top;
+            word-wrap: break-word; /* Prevents long content from overflowing */
+        }
+        .actions-column {
+            width: 8em; /* Adjusted width for Actions column */
         }
         .tag {
             display: inline-block;
@@ -110,7 +115,7 @@
             <tr>
                 <!-- 部署ID列を削除 -->
                 <th>部署名</th>
-                <th>操作</th>
+                <th class="actions-column">操作</th> <!-- Added class for column width -->
             </tr>
         </thead>
         <tbody>
@@ -126,7 +131,7 @@
         // UUID生成関数
         var generateUUID = function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (c === 'y' ? (r & 0x3 | 0x8) : r);
                 return v.toString(16);
             });
         };
@@ -200,6 +205,7 @@
                     tr.appendChild(tdName);
 
                     var tdActions = document.createElement('td');
+                    tdActions.className = 'actions-column'; // Added class for column width
                     var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
                     editBtn.className = 'button edit-button'; // 追加: edit-buttonクラスを適用
