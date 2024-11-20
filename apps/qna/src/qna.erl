@@ -55,6 +55,7 @@
       , answer => klsn:binstr()
       , answer_sup => [klsn:binstr()]
       , state => state()
+      , last_log_statement => klsn:binstr()
       , last_exec => #{
             type => embed
           , at => klsn:binstr()
@@ -115,6 +116,7 @@ user_upsert(Qna0, #{<<"user">>:=UserId}) ->
         (<<"waiting_for">>, Map) when is_map(Map) -> true;
         (<<"state">>, <<"human_answered">>) -> true;
         (<<"state">>, <<"human_checked">>) -> true;
+        (<<"last_log_statement">>, Bin) when is_binary(Bin) -> true;
         (<<"_id">>, Bin) when is_binary(Bin) -> true;
         (<<"_rev">>, Bin) when is_binary(Bin) -> true;
         (_, _) -> false
