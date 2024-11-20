@@ -56,38 +56,12 @@
             background-color: #f9f9f9;
         }
         .input-field {
-            width: 100%; /* 部署名とバージョンの入力欄を同じ幅に */
+            width: 100%; /* 部署名の入力欄を同じ幅に */
             margin-bottom: 10px;
             box-sizing: border-box;
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
-        }
-        .version-field {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .version-field input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .version-field .remove-version-btn {
-            background-color: #dc3545;
-            /* Removed margin-left to align properly */
-            padding: 0 16px; /* Set vertical padding to zero */
-            height: 32px; /* Set a fixed height to match input field */
-            width: auto; /* Allow button to size based on content */
-            margin: 0; /* Ensure no margin */
-            align-self: center; /* Center align button vertically */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .version-field .remove-version-btn:hover {
-            background-color: #c82333;
         }
         .button-group {
             display: flex;
@@ -106,16 +80,6 @@
             <label for="newDepartmentName">部署名:</label>
             <input type="text" id="newDepartmentName" class="input-field" required>
         </div>
-        <div class="form-group" id="newVersionsContainer">
-            <label>バージョン:</label>
-            <div class="version-field">
-                <input type="text" class="input-field" required>
-                <button type="button" class="button remove-version-btn">-</button>
-            </div>
-        </div>
-        <div class="form-group">
-            <button type="button" id="addVersionBtn" class="button">＋ バージョンを追加</button>
-        </div>
         <div class="form-group">
             <button type="button" id="submitAddDepartmentBtn" class="button">追加</button>
         </div>
@@ -128,16 +92,6 @@
         <div class="form-group">
             <label for="editDepartmentName">部署名:</label>
             <input type="text" id="editDepartmentName" class="input-field" required>
-        </div>
-         <label>バージョン:</label><br>
-        <div class="form-group" id="existingVersionsContainer">
-            <!-- 既存のバージョンをタグとして表示 -->
-        </div>
-        <div class="form-group" id="editVersionsContainer">
-            <!-- 初期状態ではバージョン入力欄を表示しない -->
-        </div>
-        <div class="form-group">
-            <button type="button" id="addEditVersionBtn" class="button">＋ バージョンを追加</button>
         </div>
         <div class="form-group">
             <button type="button" id="submitEditDepartmentBtn" class="button">保存</button>
@@ -153,7 +107,6 @@
             <tr>
                 <!-- 部署ID列を削除 -->
                 <th>部署名</th>
-                <th>バージョン</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -175,42 +128,6 @@
             });
         };
 
-        // バージョンフィールド削除関数
-        var removeVersionField = function(button) {
-            var field = button.parentElement;
-            var container = button.parentElement.parentElement;
-            if (container.id === 'newVersionsContainer') {
-                if (container.querySelectorAll('.version-field').length > 1) { // 最低1つを保持
-                    field.remove();
-                } else {
-                    alert('最低1つのバージョンを保持してください。');
-                }
-            } else {
-                // 編集フォームではバージョンの数に制限なし
-                field.remove();
-            }
-        };
-
-        // バージョンフィールド追加関数
-        var addVersionField = function(container) {
-            var div = document.createElement('div');
-            div.className = 'version-field';
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'input-field';
-            input.required = true;
-
-            var removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'button remove-version-btn';
-            removeBtn.textContent = '-';
-            removeBtn.addEventListener('click', () => removeVersionField(removeBtn));
-
-            div.appendChild(input);
-            div.appendChild(removeBtn);
-            container.appendChild(div);
-        };
-
         // 編集キャンセル関数
         var cancelEdit = function() {
             console.log('キャンセルボタンが押されました。');
@@ -229,43 +146,21 @@
             editForm.style.display = 'block';
             document.getElementById('editDepartmentId').value = department.id;
             document.getElementById('editDepartmentName').value = department.name;
-
-            // 既存バージョンの表示
-            var existingContainer = document.getElementById('existingVersionsContainer');
-            existingContainer.innerHTML = '';
-            department.versions.forEach(function(version) {
-                var span = document.createElement('span');
-                span.className = 'tag';
-                span.textContent = version;
-                existingContainer.appendChild(span);
-            });
-
-            // 新規バージョン入力欄のリセット（初期状態ではバージョン入力欄を追加しない）
-            var newVersionsContainer = document.getElementById('editVersionsContainer');
-            newVersionsContainer.innerHTML = '';
-            // 以前はここで addVersionField(newVersionsContainer); を呼び出していましたが、削除しました
         };
 
         // 編集フォームのリセット関数をグローバルに定義
         var clearEditForm = function() {
             document.getElementById('editDepartmentId').value = '';
             document.getElementById('editDepartmentName').value = '';
-            var existingContainer = document.getElementById('existingVersionsContainer');
-            existingContainer.innerHTML = '';
-            var newVersionsContainer = document.getElementById('editVersionsContainer');
-            newVersionsContainer.innerHTML = '';
-            // 以前はここで addVersionField(newVersionsContainer); を呼び出していましたが、削除しました
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             var departmentsTableBody = document.querySelector('#departmentsTable tbody');
             var submitAddDepartmentBtn = document.getElementById('submitAddDepartmentBtn');
-            var addVersionBtn = document.getElementById('addVersionBtn');
 
             var editDepartmentForm = document.getElementById('editDepartmentForm');
             var cancelEditDepartmentBtn = document.getElementById('cancelEditDepartmentBtn');
             var submitEditDepartmentBtn = document.getElementById('submitEditDepartmentBtn');
-            var addEditVersionBtn = document.getElementById('addEditVersionBtn');
 
             // 部署データの取得と表示
             var fetchDepartments = function() {
@@ -301,15 +196,6 @@
                     tdName.textContent = department.name;
                     tr.appendChild(tdName);
 
-                    var tdVersions = document.createElement('td');
-                    department.versions.forEach(function(version) {
-                        var span = document.createElement('span');
-                        span.className = 'tag';
-                        span.textContent = version;
-                        tdVersions.appendChild(span);
-                    });
-                    tr.appendChild(tdVersions);
-
                     var tdActions = document.createElement('td');
                     var editBtn = document.createElement('button');
                     editBtn.textContent = '編集';
@@ -322,38 +208,18 @@
                 });
             };
 
-            // 新規追加フォームでバージョンを追加
-            addVersionBtn.addEventListener('click', () => {
-                var container = document.getElementById('newVersionsContainer');
-                addVersionField(container);
-            });
-
-            // 編集フォームでバージョンを追加
-            addEditVersionBtn.addEventListener('click', () => {
-                var container = document.getElementById('editVersionsContainer');
-                addVersionField(container);
-            });
-
-            // 既存のremove-version-btnにイベントリスナーを追加
-            document.querySelectorAll('.remove-version-btn').forEach(function(button) {
-                button.addEventListener('click', () => removeVersionField(button));
-            });
-
             // 新規部署の追加
             submitAddDepartmentBtn.addEventListener('click', () => {
                 var name = document.getElementById('newDepartmentName').value.trim();
-                var versionInputs = document.querySelectorAll('#newVersionsContainer .input-field');
-                var versions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
-                if(name === '' || versions.length === 0) {
-                    alert('部署名と少なくとも1つのバージョンを入力してください。');
+                if(name === '') {
+                    alert('部署名を入力してください。');
                     return;
                 }
 
                 var newDepartment = {
                     id: generateUUID(),
-                    name: name,
-                    versions: versions
+                    name: name
                 };
 
                 // 既存の部署データに新しい部署を追加
@@ -400,8 +266,6 @@
             submitEditDepartmentBtn.addEventListener('click', () => {
                 var id = document.getElementById('editDepartmentId').value;
                 var name = document.getElementById('editDepartmentName').value.trim();
-                var versionInputs = document.querySelectorAll('#editVersionsContainer .input-field');
-                var newVersions = Array.from(versionInputs).map(input => input.value.trim()).filter(v => v !== '');
 
                 if(name === '') {
                     alert('部署名を入力してください。');
@@ -423,8 +287,7 @@
 
                 var updatedDepartment = {
                     id: id,
-                    name: name,
-                    versions: existingDepartment.versions.concat(newVersions) // バージョンは追加のみ
+                    name: name
                 };
 
                 // 更新された部署リストを作成
@@ -472,20 +335,12 @@
             // 新規追加フォームのリセット
             var clearAddForm = function() {
                 document.getElementById('newDepartmentName').value = '';
-                var container = document.getElementById('newVersionsContainer');
-                container.innerHTML = '';
-                addVersionField(container);
             };
 
             // 編集フォームのリセット
             var clearEditForm = function() {
                 document.getElementById('editDepartmentId').value = '';
                 document.getElementById('editDepartmentName').value = '';
-                var existingContainer = document.getElementById('existingVersionsContainer');
-                existingContainer.innerHTML = '';
-                var newVersionsContainer = document.getElementById('editVersionsContainer');
-                newVersionsContainer.innerHTML = '';
-                // 以前はここで addVersionField(newVersionsContainer); を呼び出していましたが、削除しました
             };
 
             // 初期データの取得
