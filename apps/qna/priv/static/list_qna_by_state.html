@@ -54,7 +54,6 @@
     <table id="qnaTable">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>製品名</th>
                 <th>製品バージョン</th>
                 <th>シートID</th>
@@ -168,15 +167,10 @@
                     .then(data => {
                         if (data.success) {
                             if (data.qna_list.length === 0) {
-                                qnaTableBody.innerHTML = '<tr><td colspan="11">この状態に該当するQNAはありません。</td></tr>';
+                                qnaTableBody.innerHTML = '<tr><td colspan="10">この状態に該当するQNAはありません。</td></tr>';
                             } else {
                                 data.qna_list.forEach(qna => {
                                     const row = document.createElement('tr');
-                                    
-                                    // IDセル
-                                    const idCell = document.createElement('td');
-                                    idCell.innerHTML = escapeHTML(qna._id);
-                                    row.appendChild(idCell);
                                     
                                     // 製品名セル
                                     const productName = productMap[qna.embe_metadata.product_id] || '不明な製品';
