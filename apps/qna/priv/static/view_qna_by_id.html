@@ -351,7 +351,7 @@
                     }
                     else if (log.type === 'ai_answering') {
                         logEntry.classList.add('type-ai-answering');
-                        content.innerText = `AI応答\n\n${log.q}:\n${log.a}`;
+                        content.innerText = `「${log.q}」に対するAIの応答:\n\n${log.a}`;
                     }
                     else if (log.type === 'ai_answer') {
                         logEntry.classList.add('type-ai-answer');

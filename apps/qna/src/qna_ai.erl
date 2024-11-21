@@ -46,12 +46,12 @@
       , state := qna:state()
     }.
 fill_out(#{search_result := LastQna, this := Qna}) ->
-    OnUnanswerable = fun(ChildLog) ->
-        throw({?MODULE, unanswerable, ChildLog})
+    OnUnanswerable = fun(ChildChat) ->
+        throw({?MODULE, unanswerable, ChildChat})
     end,
     try
         fill_out_(Qna, LastQna, OnUnanswerable)
-    of {Answer, AnswerSup, ChildLog} ->
+    of {Answer, AnswerSup, #{qna_ai_answering_logs:=ChildLog}} ->
         #{
             log => [#{
                 type => ai_answer
@@ -64,7 +64,7 @@ fill_out(#{search_result := LastQna, this := Qna}) ->
           , answer_sup => AnswerSup
           , state => ai_answered
         }
-    catch throw:{?MODULE, unanswerable, ChildLog} ->
+    catch throw:{?MODULE, unanswerable, #{qna_ai_answering_logs:=ChildLog}} ->
         #{
             log => [#{
                 type => ai_answer
@@ -81,22 +81,49 @@ fill_out(#{search_result := LastQna, this := Qna}) ->
 
 
 fill_out_(_Qna, [], OnUnanswerable) ->
-    Log10 = [#{
-        type => ai_answering
-      , time => klsn_db:time_now()
-      , q => <<"類似する過去の回答がありません。"/utf8>>
-      , a => <<"回答できませんでした。"/utf8>>
-    }],
-    OnUnanswerable(Log10);
-fill_out_(_Qna, _SearchedQna, _OnUnanswerable) ->
-    Log10 = [#{
-        type => ai_answering
-      , time => klsn_db:time_now()
-      , q => <<"類似する過去の回答があります！"/utf8>>
-      , a => <<"未実装ですが回答します。"/utf8>>
-    }],
-    {<<"テスト回答"/utf8>>, [<<"テスト補足1"/utf8>>, <<"テスト補足1"/utf8>>], Log10}.
+    OnUnanswerable(new(#{}));
+fill_out_(Qna, SearchedQna, OnUnanswerable) ->
+    Chat0 = chat_gpte:system(
+        system_msg_from_searched_qna(SearchedQna)
+      , new(#{ qna_id => maps:get(<<"_id">>, Qna) })
+    ),
+    Chat10 = chat_gpte:system(system_msg_from_unanswered_qna(Qna), Chat0),
+    {_, Chat20} = ask(<<"過去回答に、今回の質問に関連する情報はありますか？"/utf8>>, Chat10),
+    {_, Chat30} = ask(<<"回答根拠にできそうな過去回答をピックアップしてください。"/utf8>>, Chat20),
+    {_, Chat40} = ask(<<"ピックアップした回答根拠に基づき、回答を作成してください。"/utf8>>, Chat30),
+    OnUnanswerable(Chat40),
+    {<<"テスト回答"/utf8>>, [<<"テスト補足1"/utf8>>, <<"テスト補足1"/utf8>>], Chat20}.
 
+
+system_msg_from_searched_qna(Qnas) ->
+    Data = lists:map(fun
+        (#{<<"embe_metadata">>:=#{<<"titles">>:=Titles, <<"question">>:=Question, <<"notes">>:=Notes}, <<"answer">>:=Answer, <<"answer_sup">>:=AnswerSup}) ->
+            {[
+                {titles, Titles}
+              , {question, Question}
+              , {notes, Notes}
+              , {answer, Answer}
+              , {answer_sup, AnswerSup}
+            ]}
+    end, Qnas),
+    JSON = jsone:encode(Data, [native_utf8, {indent, 2}, {space, 1}]),
+    iolist_to_binary([
+        <<"以下の過去回答に基づいて回答してください。過去回答からは判断できない場合は、分からないことを user に伝えて、適切にエスカレーションしてください。\n\n"/utf8>>
+      , JSON
+    ]).
+
+
+system_msg_from_unanswered_qna(#{<<"embe_metadata">>:=#{<<"titles">>:=Titles, <<"question">>:=Question, <<"notes">>:=Notes}}) ->
+    Data = {[
+        {titles, Titles}
+      , {question, Question}
+      , {notes, Notes}
+    ]},
+    JSON = jsone:encode(Data, [native_utf8, {indent, 2}, {space, 1}]),
+    iolist_to_binary([
+        <<"user の指示に従い、次の質問への回答を考えてください。\n\n"/utf8>>
+      , JSON
+    ]).
 
 -spec new(new_opts()) -> chat_gpte:chat().
 new(Opts) ->
@@ -104,13 +131,24 @@ new(Opts) ->
     Chat0 = chat_gpte:new(),
     Chat10 = chat_gpte:model(Model, Chat0),
     Chat20 = chat_gpte:temperature(1.0, Chat10),
-    Chat20#{  qna_ai_opts => Opts }.
+    Chat20#{  qna_ai_opts => Opts, qna_ai_answering_logs => [] }.
 
 -spec ask(klsn:binstr(), chat_gpte:chat()) -> {klsn:binstr(), chat_gpte:chat()}.
 ask(Text, Chat0) ->
     {Res, Chat10} = chat_gpte:ask(Text, Chat0),
-    log_chat_gpte(Chat10),
-    {Res, Chat10}.
+    Chat20 = Chat10#{
+        qna_ai_answering_logs => [
+            #{
+                type => ai_answering
+              , time => klsn_db:time_now()
+              , q => Text
+              , a => Res
+            }
+          | klsn_map:get([qna_ai_answering_logs], Chat10, [])
+        ]
+    },
+    log_chat_gpte(Chat20),
+    {Res, Chat20}.
 
 -spec log_chat_gpte(chat_gpte:chat()) -> ok.
 log_chat_gpte(Chat) ->
@@ -124,7 +162,7 @@ log_chat_gpte(Chat) ->
     end, chat_gpte:messages(Chat)),
     {_, _} = klsn_db:create_doc(?MODULE, #{
         messages => Messages
-      , model => chat_gpte:model(Chat)
+      , model => klsn_maybe:get_value(chat_gpte:model(Chat))
       , usage => Usage
       , type => chat
       , version => 1
