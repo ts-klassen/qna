@@ -11,16 +11,13 @@
     ]).
 
 -type text_to_vector_opts() :: #{
-        user => qna_user:user() | qna_user:id()
+        user_id => qna_user:id()
+      , qna_id => qna:id()
     }.
 
 -type new_opts() :: #{
-        user => qna_user:user() | qna_user:id()
-    }.
-
--opaque obj() :: #{
-        chat => chat_gpte:chat()
-      , info => #{}
+        user_id => qna_user:id()
+      , qna_id => qna:id()
     }.
 
 
@@ -29,12 +26,21 @@
             this := qna:qna()
           , search_result := [qna:qna()]
         }
-    ) -> #{log:=[#{
-            type := ai_answering
-          , time := klsn:binstr()
-          , q := klsn:binstr()
-          , a := klsn:binstr()
-        }]
+    ) -> #{log:=[
+            #{
+                type := ai_answering
+              , time := klsn:binstr()
+              , q := klsn:binstr()
+              , a := klsn:binstr()
+            }
+          | #{
+                type := ai_answer
+              , time := klsn:binstr()
+              , is_answerable := boolean()
+              , answer => klsn:binstr()
+              , answer_sup => [klsn:binstr()]
+            }
+        ]
       , answer := klsn:binstr()
       , answer_sup := [klsn:binstr()]
       , state := qna:state()
@@ -52,49 +58,71 @@ fill_out(#{search_result := []}) ->
       , state => ai_unanswerable
     };
 fill_out(#{search_result := LastQna, this := Qna}) ->
-    #{
-        log => [#{
-            type => ai_answering
-          , time => klsn_db:time_now()
-          , q => <<"類似する過去の回答があります！"/utf8>>
-          , a => <<"未実装のため回答できませんでした。"/utf8>>
-        }]
-      , answer => <<>>
-      , answer_sup => []
-      , state => ai_unanswerable
-    }.
+    OnUnanswerable = fun(ChildLog) ->
+        throw({?MODULE, unanswerable, ChildLog})
+    end,
+    try
+        fill_out_(Qna, LastQna, OnUnanswerable)
+    of {Answer, AnswerSup, ChildLog} ->
+        #{
+            log => [#{
+                type => ai_answer
+              , time => klsn_db:time_now()
+              , is_answerable => true
+              , answer => Answer
+              , answer_sup => AnswerSup
+            } | ChildLog]
+          , answer => Answer
+          , answer_sup => AnswerSup
+          , state => ai_answered
+        }
+    catch throw:{?MODULE, unanswerable, ChildLog} ->
+        #{
+            log => [#{
+                type => ai_answer
+              , time => klsn_db:time_now()
+              , is_answerable => false
+              , answer => <<>>
+              , answer_sup => []
+            } | ChildLog]
+          , answer => <<>>
+          , answer_sup => []
+          , state => ai_unanswerable
+        }
+    end.
 
--spec new(new_opts()) -> obj().
+
+fill_out_(_Qna, [], OnUnanswerable) ->
+    Log10 = [#{
+        type => ai_answering
+      , time => klsn_db:time_now()
+      , q => <<"類似する過去の回答がありません。"/utf8>>
+      , a => <<"回答できませんでした。"/utf8>>
+    }],
+    OnUnanswerable(Log10);
+fill_out_(_Qna, _SearchedQna, _OnUnanswerable) ->
+    Log10 = [#{
+        type => ai_answering
+      , time => klsn_db:time_now()
+      , q => <<"類似する過去の回答があります！"/utf8>>
+      , a => <<"未実装ですが回答します。"/utf8>>
+    }],
+    {<<"テスト回答"/utf8>>, [<<"テスト補足1"/utf8>>, <<"テスト補足1"/utf8>>], Log10}.
+
+
+-spec new(new_opts()) -> chat_gpte:chat().
 new(Opts) ->
     Model = <<"gpt-4o-mini">>,
     Chat0 = chat_gpte:new(),
     Chat10 = chat_gpte:model(Model, Chat0),
     Chat20 = chat_gpte:temperature(1.0, Chat10),
-    Info = case Opts of
-        #{ user := #{<<"user">>:=User} } ->
-            #{user => User};
-        #{ user := User } when is_binary(User) ->
-            #{user => User};
-        _ ->
-            #{}
-    end,
-    #{
-        chat => Chat20
-      , info => Info#{ model => Model }
-    }.
+    Chat20#{  qna_ai_opts => Opts }.
 
--spec ask(klsn:binstr(), obj()) -> {klsn:binstr(), obj()}.
-ask(Text, #{chat := Chat0, info := Info}) ->
+-spec ask(klsn:binstr(), chat_gpte:chat()) -> {klsn:binstr(), chat_gpte:chat()}.
+ask(Text, Chat0) ->
     {Res, Chat10} = chat_gpte:ask(Text, Chat0),
-    Usage = chat_gpte:get_last_usage(Chat10),
-    {_, _} = klsn_db:create_doc(?MODULE, Info#{
-        input => Text
-      , output => Res
-      , usage => Usage
-      , type => t2t
-      , version => 1
-    }),
-    {Res, #{ chat => Chat10, info => Info}}.
+    log_chat_gpte(Chat10),
+    {Res, Chat10}.
 
 -spec log_chat_gpte(chat_gpte:chat()) -> ok.
 log_chat_gpte(Chat) ->
@@ -112,6 +140,7 @@ log_chat_gpte(Chat) ->
       , usage => Usage
       , type => chat
       , version => 1
+      , qna_ai_opts => klsn_map:get([qna_ai_opts], Chat, #{})
     }),
     ok.
 
@@ -128,20 +157,13 @@ text_to_vector(Text, Opts) ->
     Emb10 = gpte_embeddings:model(Model, Emb0),
     Emb = gpte_embeddings:embed(Text, Emb10),
     Usage = gpte_embeddings:get_last_usage(Emb),
-    Info = case Opts of
-        #{ user := #{<<"user">>:=User} } ->
-            #{user => User};
-        #{ user := User } when is_binary(User) ->
-            #{user => User};
-        _ ->
-            #{}
-    end,
-    {_, _} = klsn_db:create_doc(?MODULE, Info#{
+    {_, _} = klsn_db:create_doc(?MODULE, #{
         input => Text
       , model => Model
       , usage => Usage
       , type => t2v
       , version => 1
+      , qna_ai_opts => Opts
     }),
     gpte_embeddings:get_vector(Emb).
 

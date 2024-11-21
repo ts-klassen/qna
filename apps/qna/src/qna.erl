@@ -96,6 +96,14 @@
               , q => klsn:binstr()
               , a => klsn:binstr()
             }
+
+          | #{
+                type := ai_answered
+              , time := klsn:binstr()
+              , is_answerable := boolean()
+              , answer => klsn:binstr()
+              , answer_sup => [klsn:binstr()]
+            }
         ]
     }.
 
@@ -268,7 +276,12 @@ search(QnaId) ->
         }
     end),
     EmbeId = maps:get(<<"embe_id">>, Qna),
+    #{<<"embe_metadata">>:=Meta} = Qna,
     SearchResRaw = embe:search(EmbeId, #{
+        limit => 10
+      , filter => [
+            {<<"product_id">>, maps:get(<<"product_id">>, Meta)}
+        ]
     }, new_embe()),
     SearchResQnaIds = lists:map(fun
         (#{<<"metadata">>:=#{<<"qna_id">>:=SearchQnaId}}) ->
