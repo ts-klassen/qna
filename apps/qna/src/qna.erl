@@ -91,7 +91,7 @@
               , search_result => [#{qna_id => id(), score => float()}]
             }
           | #{
-                type => ai_answering
+                type => ai_answer
               , time => klsn:binstr()
               , q => klsn:binstr()
               , a => klsn:binstr()
