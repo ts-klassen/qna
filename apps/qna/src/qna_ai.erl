@@ -88,12 +88,32 @@ fill_out_(Qna, SearchedQna, OnUnanswerable) ->
       , new(#{ qna_id => maps:get(<<"_id">>, Qna) })
     ),
     Chat10 = chat_gpte:system(system_msg_from_unanswered_qna(Qna), Chat0),
-    {_, Chat20} = ask(<<"過去回答に、今回の質問に関連する情報はありますか？"/utf8>>, Chat10),
+    {_, Chat20} = ask(<<"過去回答に、今回の質問に関連する情報はありますか？\n\n補足: 「対象外」という過去回答は、有益な情報です。過去の同様の質問に「対象外」と回答したことを根拠に、今回の質問にも「対象外」と回答できます。（逆に、過去回答で「対象外」が見つからない場合は、明確な根拠がない限り、自己判断で「対象外」とすることは許可されていません。）"/utf8>>, Chat10),
+    case has_related_questions(Chat20) of
+        true -> ok;
+        false -> OnUnanswerable(Chat20)
+    end,
     {_, Chat30} = ask(<<"回答根拠にできそうな過去回答をピックアップしてください。"/utf8>>, Chat20),
     {_, Chat40} = ask(<<"ピックアップした回答根拠に基づき、回答を作成してください。\n回答は、1つの主文と、0個以上の補足で構成されます。通常、主文は『はい』『いいえ』『該当なし』『対象外』など短く端的な文章で、詳細は補足に記載します。『◯』や『✕』などの記号で回答を求められている場合は、記号のみを主文に記載してください。"/utf8>>, Chat30),
     OnUnanswerable(Chat40),
     {<<"テスト回答"/utf8>>, [<<"テスト補足1"/utf8>>, <<"テスト補足1"/utf8>>], Chat20}.
 
+
+-spec has_related_questions(chat_gpte:chat()) -> boolean().
+has_related_questions(Chat0) ->
+    Schema = #{
+        name => has_related_questions
+      , schema => #{
+            type => object
+          , properties => #{
+                has_related_questions => #{ type => boolean }
+            }
+        }
+    },
+    Chat10 = chat_gpte:schema(Schema, Chat0),
+    {JSON, _} = ask(<<"Reply to me in JSON format.">>, Chat10),
+    #{<<"has_related_questions">>:=Res} = jsone:decode(JSON),
+    Res.
 
 system_msg_from_searched_qna(Qnas) ->
     Data = lists:map(fun
