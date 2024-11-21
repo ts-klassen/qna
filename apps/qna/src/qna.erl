@@ -280,7 +280,9 @@ search(QnaId) ->
     SearchResRaw = embe:search(EmbeId, #{
         limit => 10
       , filter => [
-            {<<"product_id">>, maps:get(<<"product_id">>, Meta)}
+            {<<"available">>, true}
+          , {<<"deleted">>, false}
+          , {<<"product_id">>, maps:get(<<"product_id">>, Meta)}
         ]
     }, new_embe()),
     SearchResQnaIds = lists:map(fun

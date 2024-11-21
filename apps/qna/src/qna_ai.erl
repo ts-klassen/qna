@@ -45,18 +45,6 @@
       , answer_sup := [klsn:binstr()]
       , state := qna:state()
     }.
-fill_out(#{search_result := []}) ->
-    #{
-        log => [#{
-            type => ai_answering
-          , time => klsn_db:time_now()
-          , q => <<"類似する過去の回答がありません。"/utf8>>
-          , a => <<"回答できませんでした。"/utf8>>
-        }]
-      , answer => <<>>
-      , answer_sup => []
-      , state => ai_unanswerable
-    };
 fill_out(#{search_result := LastQna, this := Qna}) ->
     OnUnanswerable = fun(ChildLog) ->
         throw({?MODULE, unanswerable, ChildLog})

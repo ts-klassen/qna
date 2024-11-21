@@ -110,6 +110,9 @@
             .log-entry.type-ai-answering {
                 background-color: #e0f7fa;
             }
+            .log-entry.type-ai-answer {
+                background-color: #e0f7fa;
+            }
             .log-header {
                 font-weight: bold;
                 margin-bottom: 5px;
@@ -348,7 +351,16 @@
                     }
                     else if (log.type === 'ai_answering') {
                         logEntry.classList.add('type-ai-answering');
-                        content.innerText = `AI回答\n\n${log.q}:\n${log.a}`;
+                        content.innerText = `AI応答\n\n${log.q}:\n${log.a}`;
+                    }
+                    else if (log.type === 'ai_answer') {
+                        logEntry.classList.add('type-ai-answer');
+                        if (log.is_answerable) {
+                            content.innerText = `AI回答: ${log.answer}\n\nAI補足:\n\n  ・ ${log.answer_sup.join('\n\n  ・ ')}`;
+                        }
+                        else {
+                            content.innerText = `AIが回答不能と判断しました。`;
+                        }
                     }
 
                     const header = document.createElement('div');
